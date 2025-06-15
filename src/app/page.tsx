@@ -1,103 +1,305 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Search, Plus, TrendingUp, Clock, Eye, Play, Heart, Filter } from 'lucide-react';
+import AgentCard from '@/components/AgentCard';
+import CreateAgentModal from '@/components/CreateAgentModal';
+import Header from '@/components/Header';
+import CategoryFilter from '@/components/CategoryFilter';
+
+interface Agent {
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  creator: {
+    name: string;
+    email: string;
+  };
+  metrics: {
+    views: number;
+    runs: number;
+    likes: number;
+  };
+  createdAt: string;
+  tags: string[];
+}
+
+interface AgentsResponse {
+  agents: Agent[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+const CATEGORIES = [
+  'All',
+  'Assistant',
+  'Automation',
+  'Analytics',
+  'Content',
+  'Customer Service',
+  'Development',
+  'Education',
+  'Finance',
+  'Healthcare',
+  'Marketing',
+  'Other'
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<'new' | 'trending' | 'search'>('new');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const fetchAgents = async (sort: string = 'newest', search: string = '', category: string = 'All', page: number = 1) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        sort,
+        limit: '12',
+        page: page.toString()
+      });
+      
+      if (search) params.append('search', search);
+      if (category !== 'All') params.append('category', category);
+      
+      const response = await fetch(`/api/agents?${params}`);
+      const data: AgentsResponse = await response.json();
+      
+      setAgents(data.agents);
+      setPagination(data.pagination);
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let sort = 'newest';
+    if (activeTab === 'trending') sort = 'trending';
+    
+    fetchAgents(sort, searchQuery, selectedCategory, 1);
+  }, [activeTab, searchQuery, selectedCategory]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setActiveTab('search');
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    let sort = 'newest';
+    if (activeTab === 'trending') sort = 'trending';
+    
+    fetchAgents(sort, searchQuery, selectedCategory, newPage);
+  };
+
+  const handleAgentCreated = () => {
+    // Refresh the agents list
+    let sort = 'newest';
+    if (activeTab === 'trending') sort = 'trending';
+    
+    fetchAgents(sort, searchQuery, selectedCategory, pagination.page);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header onSearch={handleSearch} />
+      
+      {/* Hero Section */}
+      <section className="gradient-bg text-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold mb-6">
+            Create AI Agents
+            <span className="block text-4xl mt-2 text-blue-200">Effortlessly</span>
+          </h1>
+          <p className="text-xl mb-8 max-w-3xl mx-auto text-blue-100">
+            Build and publish powerful AI agents with simple prompts or custom LLM configurations. 
+            Join thousands of developers creating the future of AI automation.
+          </p>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 px-8 rounded-lg transition-colors duration-200 inline-flex items-center gap-2"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <Plus className="w-5 h-5" />
+            Create Your First Agent
+          </button>
         </div>
+      </section>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Navigation Tabs */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+          <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm mb-4 lg:mb-0">
+            <button
+              onClick={() => setActiveTab('new')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'new'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              New
+            </button>
+            <button
+              onClick={() => setActiveTab('trending')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'trending'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+              Trending
+            </button>
+            <button
+              onClick={() => setActiveTab('search')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'search'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <CategoryFilter
+              categories={CATEGORIES}
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+            />
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Create Agent
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar (visible when search tab is active) */}
+        {activeTab === 'search' && (
+          <div className="mb-8">
+            <div className="relative max-w-2xl mx-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search agents by name, description, or tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Agents Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                <div className="flex justify-between">
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in">
+              {agents.map((agent) => (
+                <AgentCard key={agent._id} agent={agent} onUpdate={handleAgentCreated} />
+              ))}
+            </div>
+
+            {agents.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Search className="w-16 h-16 mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {activeTab === 'search' && searchQuery
+                    ? 'No agents found'
+                    : 'No agents available'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {activeTab === 'search' && searchQuery
+                    ? 'Try adjusting your search terms or filters'
+                    : 'Be the first to create an AI agent!'}
+                </p>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="btn-primary inline-flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Agent
+                </button>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-12">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={!pagination.hasPrev}
+                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-600">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.hasNext}
+                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      {/* Create Agent Modal */}
+      <CreateAgentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onAgentCreated={handleAgentCreated}
+      />
     </div>
   );
 }
