@@ -20,13 +20,13 @@ export default function CategoryFilter({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+        className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-md hover:bg-secondary transition-colors duration-200 font-mono"
       >
-        <Filter className="w-4 h-4 text-gray-500" />
-        <span className="text-sm font-medium text-gray-700">
-          {selectedCategory === 'All' ? 'All Categories' : selectedCategory}
+        <Filter className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground">
+          {selectedCategory === 'All' ? 'all_categories' : selectedCategory.toLowerCase()}
         </span>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
           isOpen ? 'rotate-180' : ''
         }`} />
       </button>
@@ -40,7 +40,7 @@ export default function CategoryFilter({
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-64 overflow-y-auto">
+          <div className="absolute right-0 mt-2 w-56 bg-card rounded-md shadow-lg border border-border z-20 max-h-64 overflow-y-auto">
             <div className="py-2">
               {categories.map((category) => (
                 <button
@@ -49,13 +49,13 @@ export default function CategoryFilter({
                     onCategoryChange(category);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${
+                  className={`w-full text-left px-4 py-2 text-sm font-mono transition-colors duration-200 ${
                     selectedCategory === category
-                      ? 'bg-blue-50 text-blue-600 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                   }`}
                 >
-                  {category === 'All' ? 'All Categories' : category}
+                  {category === 'All' ? 'all_categories' : category.toLowerCase()}
                 </button>
               ))}
             </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Agent from '@/models/Agent';
+import type { AgentQuery, AgentSortQuery, AgentData } from '@/types/agent';
 
 // GET /api/agents - Fetch agents with filtering and sorting
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build query
-    let query: any = { deploymentStatus: 'published' };
+    const query: AgentQuery = { deploymentStatus: 'published' };
     
     if (category && category !== 'all') {
       query.category = category;
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build sort
-    let sortQuery: any = {};
+    let sortQuery: AgentSortQuery = {};
     switch (sort) {
       case 'trending':
         sortQuery = { 'metrics.views': -1, 'metrics.runs': -1 };
@@ -111,14 +112,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const agentData: any = {
+    const agentData: AgentData = {
       name,
       description,
       creationMethod,
       category,
       creator,
       tags: tags || [],
-      deploymentStatus
+      deploymentStatus,
+      metrics: {
+        views: 0,
+        runs: 0,
+        likes: 0
+      }
     };
 
     if (creationMethod === 'prompt') {

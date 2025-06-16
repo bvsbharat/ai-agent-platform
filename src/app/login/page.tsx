@@ -38,7 +38,7 @@ const LoginPage = () => {
       } else {
         setError(result.error || 'Authentication failed');
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

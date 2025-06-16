@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, Play, Heart, User, Calendar, Tag, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { Eye, Download, Heart, User, Calendar, Tag, MoreVertical, Edit, Trash2, Bot, Zap, BarChart3, FileText, Headphones, Code, GraduationCap, DollarSign, Heart as HeartIcon, Megaphone, HelpCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Agent {
@@ -29,19 +29,36 @@ interface AgentCardProps {
 
 const getCategoryColor = (category: string) => {
   const colors: { [key: string]: string } = {
-    'Assistant': 'bg-blue-100 text-blue-800',
-    'Automation': 'bg-green-100 text-green-800',
-    'Analytics': 'bg-purple-100 text-purple-800',
-    'Content': 'bg-yellow-100 text-yellow-800',
-    'Customer Service': 'bg-pink-100 text-pink-800',
-    'Development': 'bg-indigo-100 text-indigo-800',
-    'Education': 'bg-orange-100 text-orange-800',
-    'Finance': 'bg-emerald-100 text-emerald-800',
-    'Healthcare': 'bg-red-100 text-red-800',
-    'Marketing': 'bg-cyan-100 text-cyan-800',
-    'Other': 'bg-gray-100 text-gray-800'
+    'Assistant': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+    'Automation': 'bg-green-500/20 text-green-400 border border-green-500/30',
+    'Analytics': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+    'Content': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+    'Customer Service': 'bg-pink-500/20 text-pink-400 border border-pink-500/30',
+    'Development': 'bg-primary/20 text-primary border border-primary/30',
+    'Education': 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+    'Finance': 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+    'Healthcare': 'bg-red-500/20 text-red-400 border border-red-500/30',
+    'Marketing': 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
+    'Other': 'bg-muted text-muted-foreground border border-border'
   };
   return colors[category] || colors['Other'];
+};
+
+const getCategoryIcon = (category: string) => {
+  const icons: { [key: string]: any } = {
+    'Assistant': Bot,
+    'Automation': Zap,
+    'Analytics': BarChart3,
+    'Content': FileText,
+    'Customer Service': Headphones,
+    'Development': Code,
+    'Education': GraduationCap,
+    'Finance': DollarSign,
+    'Healthcare': HeartIcon,
+    'Marketing': Megaphone,
+    'Other': HelpCircle
+  };
+  return icons[category] || icons['Other'];
 };
 
 export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
@@ -72,30 +89,23 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
     }
   };
 
-  const handleRun = async () => {
+  const handleInstall = async () => {
     setIsRunning(true);
-    setRunResult(null);
     
     try {
-      const response = await fetch(`/api/agents/${agent._id}/run`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          input: 'Hello! Please introduce yourself and explain what you can do.',
-          userId: 'demo-user'
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setRunResult(result.response);
-        onUpdate(); // Refresh to update run count
-      }
+      // Simulate installation process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // In a real app, this would handle the actual installation
+      console.log('Installing agent:', agent.name);
+      
+      // Show success message or redirect to installed agents
+      alert(`Agent "${agent.name}" has been installed successfully!`);
+      
+      onUpdate(); // Refresh to update metrics
     } catch (error) {
-      console.error('Error running agent:', error);
-      setRunResult('Error running agent. Please try again.');
+      console.error('Error installing agent:', error);
+      alert('Error installing agent. Please try again.');
     } finally {
       setIsRunning(false);
     }
@@ -117,47 +127,52 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
     }
   };
 
+  const CategoryIcon = getCategoryIcon(agent.category);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover group">
+    <div className="code-card group h-80 w-80">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-            {agent.name}
-          </h3>
-          <span className={`category-badge ${getCategoryColor(agent.category)}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <CategoryIcon className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground line-clamp-1 font-mono">
+              {agent.name}
+            </h3>
+          </div>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium font-mono ${getCategoryColor(agent.category)}`}>
             {agent.category}
           </span>
         </div>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg border border-border z-10">
               <div className="py-1">
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     // Handle edit - in a real app, this would open an edit modal
                   }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-muted font-mono"
                 >
                   <Edit className="w-4 h-4" />
-                  Edit
+                  edit
                 </button>
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     handleDelete();
                   }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 font-mono"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  delete
                 </button>
               </div>
             </div>
@@ -166,84 +181,101 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-        {agent.description}
+      <p className="text-muted-foreground text-sm mb-3 line-clamp-2 font-mono">
+        <span className="text-primary">// </span>{agent.description}
       </p>
 
       {/* Tags */}
       {agent.tags && agent.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-4">
-          {agent.tags.slice(0, 3).map((tag, index) => (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {agent.tags.slice(0, 2).map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md"
+              className="inline-flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded-md font-mono"
             >
               <Tag className="w-3 h-3" />
               {tag}
             </span>
           ))}
-          {agent.tags.length > 3 && (
-            <span className="text-xs text-gray-500">+{agent.tags.length - 3} more</span>
+          {agent.tags.length > 2 && (
+            <span className="text-xs text-muted-foreground font-mono">+{agent.tags.length - 2} more</span>
           )}
         </div>
       )}
 
       {/* Creator Info */}
-      <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
+      <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground font-mono">
         <User className="w-4 h-4" />
-        <span>{agent.creator.name}</span>
+        <span className="truncate">{agent.creator.name}</span>
         <span>•</span>
         <Calendar className="w-4 h-4" />
-        <span>{formatDistanceToNow(new Date(agent.createdAt), { addSuffix: true })}</span>
+        <span className="truncate">{formatDistanceToNow(new Date(agent.createdAt), { addSuffix: true })}</span>
       </div>
 
       {/* Metrics */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <div className="flex items-center gap-1">
-            <Eye className="w-4 h-4" />
-            <span>{agent.metrics.views}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Play className="w-4 h-4" />
-            <span>{agent.metrics.runs}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Heart className={`w-4 h-4 ${isLiked ? 'text-red-500 fill-current' : ''}`} />
-            <span>{agent.metrics.likes}</span>
-          </div>
+      <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground font-mono">
+        <div className="flex items-center gap-1">
+          <Eye className="w-4 h-4" />
+          <span>{agent.metrics.views}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Download className="w-4 h-4" />
+          <span>{agent.metrics.runs}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Heart className={`w-4 h-4 ${isLiked ? 'text-red-400 fill-current' : ''}`} />
+          <span>{agent.metrics.likes}</span>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-auto">
         <button
-          onClick={handleRun}
+          onClick={handleInstall}
           disabled={isRunning}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium py-2 px-3 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
+          className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-mono"
         >
-          <Play className="w-4 h-4" />
-          {isRunning ? 'Running...' : 'Run'}
+          {isRunning ? (
+            <>
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              installing...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              install
+            </>
+          )}
+        </button>
+        <button
+          onClick={() => {
+            const traeUrl = `https://s.trae.ai/a/${agent._id}`;
+            // Try multiple methods to open the Trae app
+            const link = document.createElement('a');
+            link.href = traeUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }}
+          className="px-4 py-2 border border-border text-foreground rounded-md hover:bg-muted transition-colors font-mono"
+        >
+          try
         </button>
         <button
           onClick={handleLike}
-          className={`p-2 rounded-md transition-colors duration-200 ${
+          className={`p-2 border rounded-md transition-colors font-mono ${
             isLiked
-              ? 'bg-red-100 text-red-600 hover:bg-red-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'border-red-400/50 text-red-400 bg-red-500/10'
+              : 'border-border text-muted-foreground hover:bg-muted'
           }`}
         >
           <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
         </button>
       </div>
 
-      {/* Run Result */}
-      {runResult && (
-        <div className="mt-4 p-3 bg-gray-50 rounded-md">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Agent Response:</h4>
-          <p className="text-sm text-gray-600 line-clamp-4">{runResult}</p>
-        </div>
-      )}
+
     </div>
   );
 }

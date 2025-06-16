@@ -6,10 +6,11 @@ import mongoose from 'mongoose';
 // GET /api/agents/[id] - Get a specific agent
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const params = await context.params;
     
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return NextResponse.json(
@@ -47,10 +48,11 @@ export async function GET(
 // PUT /api/agents/[id] - Update a specific agent
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const params = await context.params;
     
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return NextResponse.json(
@@ -96,10 +98,11 @@ export async function PUT(
 // DELETE /api/agents/[id] - Delete a specific agent
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const params = await context.params;
     
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return NextResponse.json(

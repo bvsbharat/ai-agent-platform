@@ -6,10 +6,11 @@ import mongoose from 'mongoose';
 // POST /api/agents/[id]/run - Run an agent and increment run count
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const params = await context.params;
     
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
       return NextResponse.json(
@@ -19,7 +20,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { input, userId } = body;
+    const { input } = body;
 
     if (!input) {
       return NextResponse.json(

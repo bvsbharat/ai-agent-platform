@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Agent from '@/models/Agent';
+import type { SearchFilter, SortObject } from '@/types/search';
 
 // GET /api/search - Search agents by query
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build search filter
-    const searchFilter: any = {
+    const searchFilter: SearchFilter = {
       deploymentStatus: 'published',
       $or: [
         { name: { $regex: query, $options: 'i' } },
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build sort object
-    const sortObject: any = {};
+    const sortObject: SortObject = {};
     if (sortBy === 'popularity') {
       sortObject['metrics.likes'] = order === 'desc' ? -1 : 1;
     } else if (sortBy === 'views') {

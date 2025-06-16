@@ -65,11 +65,13 @@ const AgentSchema: Schema = new Schema({
     }
   },
   customLLMConfig: {
-    model: String,
-    temperature: { type: Number, min: 0, max: 2 },
-    maxTokens: { type: Number, min: 1, max: 4000 },
-    systemPrompt: String,
-    apiEndpoint: String,
+    type: {
+      model: String,
+      temperature: { type: Number, min: 0, max: 2 },
+      maxTokens: { type: Number, min: 1, max: 4000 },
+      systemPrompt: String,
+      apiEndpoint: String
+    },
     required: function(this: IAgent) {
       return this.creationMethod === 'custom-llm';
     }

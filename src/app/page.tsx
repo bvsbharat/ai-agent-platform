@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, TrendingUp, Clock, Eye, Play, Heart, Filter } from 'lucide-react';
+import { Search, Plus, TrendingUp, Clock } from 'lucide-react';
 import AgentCard from '@/components/AgentCard';
 import CreateAgentModal from '@/components/CreateAgentModal';
 import Header from '@/components/Header';
@@ -83,7 +83,7 @@ export default function Home() {
       const response = await fetch(`/api/agents?${params}`);
       const data: AgentsResponse = await response.json();
       
-      setAgents(data.agents);
+      setAgents(data.agents || []);
       setPagination(data.pagination);
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -124,23 +124,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header onSearch={handleSearch} />
       
       {/* Hero Section */}
-      <section className="gradient-bg text-white py-20">
+      <section className="gradient-bg text-foreground py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            Create AI Agents
-            <span className="block text-4xl mt-2 text-blue-200">Effortlessly</span>
+          <h1 className="text-5xl font-bold mb-6 font-mono">
+            <span className="terminal-text">$</span> Create AI Agents
+            <span className="block text-4xl mt-2 text-primary">--effortlessly</span>
           </h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto text-blue-100">
-            Build and publish powerful AI agents with simple prompts or custom LLM configurations. 
-            Join thousands of developers creating the future of AI automation.
+          <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground font-mono">
+            Build and deploy powerful AI agents with simple prompts or custom LLM configurations. <br/>
+            <span className="text-primary">// Join thousands of developers creating the future of AI automation</span>
           </p>
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 px-8 rounded-lg transition-colors duration-200 inline-flex items-center gap-2"
+            className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8"
           >
             <Plus className="w-5 h-5" />
             Create Your First Agent
@@ -152,39 +152,39 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Navigation Tabs */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm mb-4 lg:mb-0">
+          <div className="flex space-x-1 bg-card border border-border rounded-md p-1 shadow-sm mb-4 lg:mb-0">
             <button
               onClick={() => setActiveTab('new')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium font-mono transition-colors ${
                 activeTab === 'new'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-blue-600'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               <Clock className="w-4 h-4" />
-              New
+              new
             </button>
             <button
               onClick={() => setActiveTab('trending')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium font-mono transition-colors ${
                 activeTab === 'trending'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-blue-600'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
-              Trending
+              trending
             </button>
             <button
               onClick={() => setActiveTab('search')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium font-mono transition-colors ${
                 activeTab === 'search'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-blue-600'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               <Search className="w-4 h-4" />
-              Search
+              search
             </button>
           </div>
 
@@ -208,13 +208,13 @@ export default function Home() {
         {activeTab === 'search' && (
           <div className="mb-8">
             <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search agents by name, description, or tags..."
+                placeholder="// Search agents by name, description, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-field pl-10 pr-4 py-3"
               />
             </div>
           </div>
@@ -224,13 +224,13 @@ export default function Home() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg p-6 shadow-sm animate-pulse">
-                <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded mb-4"></div>
+              <div key={i} className="code-card animate-pulse">
+                <div className="h-4 bg-muted rounded mb-4"></div>
+                <div className="h-3 bg-muted rounded mb-2"></div>
+                <div className="h-3 bg-muted rounded mb-4"></div>
                 <div className="flex justify-between">
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  <div className="h-3 bg-muted rounded w-16"></div>
+                  <div className="h-3 bg-muted rounded w-16"></div>
                 </div>
               </div>
             ))}
@@ -238,25 +238,25 @@ export default function Home() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in">
-              {agents.map((agent) => (
+              {agents && agents.map((agent) => (
                 <AgentCard key={agent._id} agent={agent} onUpdate={handleAgentCreated} />
               ))}
             </div>
 
-            {agents.length === 0 && (
+            {(!agents || agents.length === 0) && (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
+                <div className="text-muted-foreground mb-4">
                   <Search className="w-16 h-16 mx-auto" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-foreground mb-2 font-mono">
                   {activeTab === 'search' && searchQuery
-                    ? 'No agents found'
-                    : 'No agents available'}
+                    ? 'no_agents_found'
+                    : 'no_agents_available'}
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-muted-foreground mb-6 font-mono">
                   {activeTab === 'search' && searchQuery
-                    ? 'Try adjusting your search terms or filters'
-                    : 'Be the first to create an AI agent!'}
+                    ? '// try adjusting your search terms or filters'
+                    : '// be the first to create an AI agent!'}
                 </p>
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
@@ -276,17 +276,17 @@ export default function Home() {
                   disabled={!pagination.hasPrev}
                   className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  previous
                 </button>
-                <span className="text-gray-600">
-                  Page {pagination.page} of {pagination.totalPages}
+                <span className="text-muted-foreground font-mono">
+                  page {pagination.page} of {pagination.totalPages}
                 </span>
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={!pagination.hasNext}
                   className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  next
                 </button>
               </div>
             )}

@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Agent Platform
+
+A comprehensive Next.js platform for creating, managing, and deploying AI agents with support for both prompt-based and custom LLM configurations.
+
+## Features
+
+- **Agent Creation**: Create AI agents using either simple prompts or custom LLM configurations
+- **Agent Management**: Browse, search, and filter agents by category and tags
+- **User Authentication**: Secure login system with JWT tokens
+- **Agent Analytics**: Track views, runs, and likes for each agent
+- **Responsive Design**: Modern UI built with Tailwind CSS
+- **Database Integration**: MongoDB with Mongoose for data persistence
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
+- **Database**: MongoDB with Mongoose
+- **Authentication**: JWT with bcryptjs
+- **Icons**: Lucide React
+- **UI Components**: Headless UI
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- MongoDB database
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/bvsbharat/ai-agent-platform-v2.git
+cd ai-agent-platform-v2
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+Create a `.env.local` file in the root directory:
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                 # Next.js app directory
+│   ├── api/            # API routes
+│   │   ├── agents/     # Agent CRUD operations
+│   │   ├── auth/       # Authentication endpoints
+│   │   ├── categories/ # Category management
+│   │   └── search/     # Search functionality
+│   ├── login/          # Login page
+│   └── page.tsx        # Home page
+├── components/         # Reusable React components
+│   ├── AgentCard.tsx
+│   ├── CategoryFilter.tsx
+│   ├── CreateAgentModal.tsx
+│   └── Header.tsx
+├── contexts/           # React contexts
+│   └── AuthContext.tsx
+├── lib/                # Utility libraries
+│   └── mongodb.ts
+├── models/             # Mongoose models
+│   ├── Agent.ts
+│   └── User.ts
+└── types/              # TypeScript type definitions
+    ├── agent.ts
+    └── search.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Endpoints
 
-## Deploy on Vercel
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Agents
+- `GET /api/agents` - Get all agents with filtering and sorting
+- `POST /api/agents` - Create a new agent
+- `GET /api/agents/[id]` - Get agent by ID
+- `PUT /api/agents/[id]` - Update agent
+- `DELETE /api/agents/[id]` - Delete agent
+- `POST /api/agents/[id]/run` - Execute agent
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Categories
+- `GET /api/categories` - Get all available categories
+
+### Search
+- `GET /api/search` - Search agents by query
+
+## Agent Types
+
+### Prompt-based Agents
+Simple agents created with a text prompt that defines their behavior.
+
+### Custom LLM Agents
+Advanced agents with custom configurations including:
+- Model selection
+- Temperature settings
+- Max tokens
+- System prompts
+- Custom API endpoints
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Test Results
+
+*Test results will be documented here after testing phase*
+
+## Deployment
+
+This application can be deployed on various platforms including Vercel, Netlify, or any Node.js hosting service.
+
+### Environment Variables for Production
+
+Ensure the following environment variables are set:
+- `MONGODB_URI`: MongoDB connection string
+- `JWT_SECRET`: Secret key for JWT token signing
+- `NODE_ENV`: Set to 'production'

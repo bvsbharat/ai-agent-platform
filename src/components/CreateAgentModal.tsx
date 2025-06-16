@@ -44,14 +44,14 @@ export default function CreateAgentModal({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleCustomConfigChange = (field: string, value: any) => {
+  const handleCustomConfigChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       customConfig: {
@@ -93,12 +93,19 @@ export default function CreateAgentModal({
 
     try {
       const agentData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        creationMethod: formData.creationMethod === 'custom' ? 'custom-llm' : formData.creationMethod,
         tags: formData.tags.filter(tag => tag.trim() !== ''),
         creator: {
+          id: 'demo-user-id',
           name: 'Demo User',
           email: 'demo@example.com',
         },
+        deploymentStatus: 'published',
+        ...(formData.creationMethod === 'prompt' && { prompt: formData.prompt }),
+        ...(formData.creationMethod === 'custom' && { customLLMConfig: formData.customConfig }),
       };
 
       const response = await fetch('/api/agents', {
@@ -142,14 +149,14 @@ export default function CreateAgentModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-md shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Create New Agent</h2>
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground font-mono">create_new_agent()</h2>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted"
           >
             <X className="w-5 h-5" />
           </button>
@@ -160,35 +167,35 @@ export default function CreateAgentModal({
           {/* Basic Info */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Agent Name *
+              <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                agent_name *
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 className="input-field"
-                placeholder="Enter agent name"
+                placeholder="enter agent name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
+              <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                description *
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 className="input-field min-h-[100px] resize-none"
-                placeholder="Describe what your agent does"
+                placeholder="describe what your agent does"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category *
+              <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                category *
               </label>
               <select
                 value={formData.category}
@@ -206,8 +213,8 @@ export default function CreateAgentModal({
 
             {/* Tags */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tags
+              <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                tags
               </label>
               <div className="space-y-2">
                 {formData.tags.map((tag, index) => (
@@ -217,13 +224,13 @@ export default function CreateAgentModal({
                       value={tag}
                       onChange={(e) => handleTagChange(index, e.target.value)}
                       className="input-field flex-1"
-                      placeholder="Enter tag"
+                      placeholder="enter tag"
                     />
                     <button
                       type="button"
                       onClick={() => removeTag(index)}
                       disabled={formData.tags.length === 1}
-                      className="p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 text-muted-foreground hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -232,54 +239,54 @@ export default function CreateAgentModal({
                 <button
                   type="button"
                   onClick={addTag}
-                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+                  className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-mono"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Tag
+                  add_tag
                 </button>
               </div>
             </div>
           </div>
 
           {/* Creation Method */}
-          <div className="border-t border-gray-200 pt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-4">
-              Creation Method *
+          <div className="border-t border-border pt-6">
+            <label className="block text-sm font-medium text-foreground mb-4 font-mono">
+              creation_method *
             </label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => handleInputChange('creationMethod', 'prompt')}
-                className={`p-4 border-2 rounded-lg text-left transition-colors duration-200 ${
+                className={`p-4 border-2 rounded-md text-left transition-colors duration-200 ${
                   formData.creationMethod === 'prompt'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border hover:border-muted-foreground'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <Sparkles className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-gray-900">Simple Prompt</span>
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <span className="font-medium text-foreground font-mono">simple_prompt</span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Create an agent with a simple prompt description
+                <p className="text-sm text-muted-foreground font-mono">
+                  // create agent with prompt description
                 </p>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleInputChange('creationMethod', 'custom')}
-                className={`p-4 border-2 rounded-lg text-left transition-colors duration-200 ${
+                className={`p-4 border-2 rounded-md text-left transition-colors duration-200 ${
                   formData.creationMethod === 'custom'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border hover:border-muted-foreground'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <Settings className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium text-gray-900">Custom LLM</span>
+                  <Settings className="w-5 h-5 text-primary" />
+                  <span className="font-medium text-foreground font-mono">custom_llm</span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Configure custom LLM settings and parameters
+                <p className="text-sm text-muted-foreground font-mono">
+                  // configure custom LLM settings
                 </p>
               </button>
             </div>
@@ -288,14 +295,14 @@ export default function CreateAgentModal({
           {/* Configuration based on creation method */}
           {formData.creationMethod === 'prompt' ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Agent Prompt *
+              <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                agent_prompt *
               </label>
               <textarea
                 value={formData.prompt}
                 onChange={(e) => handleInputChange('prompt', e.target.value)}
                 className="input-field min-h-[120px] resize-none"
-                placeholder="Describe how your agent should behave and what it should do..."
+                placeholder="describe how your agent should behave..."
                 required
               />
             </div>
@@ -303,24 +310,24 @@ export default function CreateAgentModal({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Model
+                  <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                    model
                   </label>
                   <select
                     value={formData.customConfig.model}
                     onChange={(e) => handleCustomConfigChange('model', e.target.value)}
                     className="input-field"
                   >
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="gpt-4">GPT-4</option>
-                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                    <option value="claude-3-opus">Claude 3 Opus</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                    <option value="gpt-4">gpt-4</option>
+                    <option value="claude-3-sonnet">claude-3-sonnet</option>
+                    <option value="claude-3-opus">claude-3-opus</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Temperature: {formData.customConfig.temperature}
+                  <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                    temperature: {formData.customConfig.temperature}
                   </label>
                   <input
                     type="range"
@@ -329,14 +336,14 @@ export default function CreateAgentModal({
                     step="0.1"
                     value={formData.customConfig.temperature}
                     onChange={(e) => handleCustomConfigChange('temperature', parseFloat(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-primary"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Tokens
+                <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                  max_tokens
                 </label>
                 <input
                   type="number"
@@ -349,14 +356,14 @@ export default function CreateAgentModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  System Prompt *
+                <label className="block text-sm font-medium text-foreground mb-2 font-mono">
+                  system_prompt *
                 </label>
                 <textarea
                   value={formData.customConfig.systemPrompt}
                   onChange={(e) => handleCustomConfigChange('systemPrompt', e.target.value)}
                   className="input-field min-h-[120px] resize-none"
-                  placeholder="Define the system prompt for your custom agent..."
+                  placeholder="define the system prompt for your agent..."
                   required
                 />
               </div>
@@ -364,20 +371,20 @@ export default function CreateAgentModal({
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-6 border-t border-gray-200">
+          <div className="flex gap-3 pt-6 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors duration-200"
+              className="flex-1 px-4 py-2 text-foreground bg-secondary hover:bg-muted rounded-md font-medium transition-colors duration-200 font-mono"
             >
-              Cancel
+              cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors duration-200"
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded-md font-medium transition-colors duration-200 font-mono"
             >
-              {isSubmitting ? 'Creating...' : 'Create Agent'}
+              {isSubmitting ? 'creating...' : 'create_agent()'}
             </button>
           </div>
         </form>
