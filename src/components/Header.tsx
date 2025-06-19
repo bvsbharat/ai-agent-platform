@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, Menu, X, Bot, Settings } from 'lucide-react';
+import Image from 'next/image';
+import { Search, Menu, X, Bot, Zap, Shield, TrendingUp, Settings } from 'lucide-react';
+import ThemeSelector from './ThemeSelector';
+import { useOptimizedNavigation } from '@/utils/navigationOptimizer';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -11,6 +14,7 @@ interface HeaderProps {
 export default function Header({ onSearch }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { navigateWithPreload } = useOptimizedNavigation();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,10 +27,16 @@ export default function Header({ onSearch }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <Bot className="w-8 h-8 text-primary" />
-              <span className="ml-2 text-xl font-bold text-foreground font-mono">True Agents Hub</span>
-            </div>
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <Image
+                src="/superagents-text-logo.svg"
+                alt="SuperAgents"
+                width={240}
+                height={64}
+                className="h-12 w-auto"
+                priority
+              />
+            </Link>
           </div>
 
           {/* Desktop Search */}
@@ -46,29 +56,39 @@ export default function Header({ onSearch }: HeaderProps) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <nav className="flex space-x-8">
-              <Link
-                href="/rules"
-                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors"
+              <button
+                onClick={() => navigateWithPreload('/agents')}
+                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors flex items-center gap-2"
               >
+                <Bot className="w-4 h-4" />
+                Agents
+              </button>
+              <button
+                onClick={() => navigateWithPreload('/rules')}
+                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors flex items-center gap-2"
+              >
+                <Shield className="w-4 h-4" />
                 Rules
-              </Link>
-              <Link
-                href="/trending"
-                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors"
+              </button>
+              <button
+                onClick={() => navigateWithPreload('/mcps')}
+                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors flex items-center gap-2"
               >
-                Trending
-              </Link>
-              <Link
-                href="/mcps"
-                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors"
-              >
+                <Zap className="w-4 h-4" />
                 MCPs
-              </Link>
-
+              </button>
+              <button
+                onClick={() => navigateWithPreload('/trending')}
+                className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors flex items-center gap-2"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Trending
+              </button>
             </nav>
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
+              <ThemeSelector className="" />
               <button className="p-2 text-muted-foreground hover:text-primary transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
@@ -112,32 +132,40 @@ export default function Header({ onSearch }: HeaderProps) {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-background border-t border-border">
           <div className="px-4 py-4 space-y-2">
-            <Link
-              href="/"
-              className="block text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors"
+            <button
+              onClick={() => { navigateWithPreload('/agents'); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors flex items-center gap-2"
             >
+              <Bot className="w-4 h-4" />
               agents
-            </Link>
-            <Link
-              href="/rules"
-              className="block text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors"
+            </button>
+            <button
+              onClick={() => { navigateWithPreload('/rules'); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors flex items-center gap-2"
             >
+              <Shield className="w-4 h-4" />
               rules
-            </Link>
-            <Link
-              href="/trending"
-              className="block text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors"
+            </button>
+            <button
+              onClick={() => { navigateWithPreload('/mcps'); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors flex items-center gap-2"
             >
-              trending
-            </Link>
-            <Link
-              href="/mcps"
-              className="block text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors"
-            >
+              <Zap className="w-4 h-4" />
               mcps
-            </Link>
+            </button>
+            <button
+              onClick={() => { navigateWithPreload('/trending'); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors flex items-center gap-2"
+            >
+              <TrendingUp className="w-4 h-4" />
+              trending
+            </button>
 
-            <div className="pt-4 border-t border-border">
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-mono text-muted-foreground">Theme</span>
+                <ThemeSelector className="" />
+              </div>
               <button className="btn-primary w-full text-sm">
                 sign_in
               </button>

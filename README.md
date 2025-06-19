@@ -1,39 +1,37 @@
-# AI Agent Platform
+# TrueAgents AI Platform
 
-A comprehensive Next.js platform for creating, managing, and deploying AI agents with support for both prompt-based and custom LLM configurations.
+A Next.js application for discovering, creating, and managing AI agents with MCP (Model Context Protocol) server integration.
 
 ## Features
 
-- **Agent Creation**: Create AI agents using either simple prompts or custom LLM configurations
-- **Agent Management**: Browse, search, and filter agents by category and tags
-- **User Authentication**: Secure login system with JWT tokens
-- **Agent Analytics**: Track views, runs, and likes for each agent
+- **Agent Discovery**: Browse and search through AI agents
+- **MCP Integration**: Sync and manage Model Context Protocol servers
+- **Rules Management**: Create and share coding rules and best practices
 - **Responsive Design**: Modern UI built with Tailwind CSS
-- **Database Integration**: MongoDB with Mongoose for data persistence
+- **MongoDB Integration**: Data persistence for agents, MCPs, and rules
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS 4
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS
 - **Database**: MongoDB with Mongoose
-- **Authentication**: JWT with bcryptjs
+- **Language**: TypeScript
 - **Icons**: Lucide React
-- **UI Components**: Headless UI
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ 
-- MongoDB database
+- MongoDB instance
 - npm or yarn
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/bvsbharat/ai-agent-platform-v2.git
-cd ai-agent-platform-v2
+git clone https://github.com/bvsbharat/TrueAgents_V2.git
+cd TrueAgents_V2/ai-agent-platform
 ```
 
 2. Install dependencies:
@@ -42,10 +40,13 @@ npm install
 ```
 
 3. Set up environment variables:
-Create a `.env.local` file in the root directory:
-```env
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
+```bash
+cp .env.example .env.local
+```
+
+Update `.env.local` with your MongoDB connection string:
+```
+MONGODB_URI=mongodb://localhost:27017/trueagents
 ```
 
 4. Run the development server:
@@ -55,67 +56,121 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Testing Results
+
+### ✅ Working Features
+
+1. **Home Page**
+   - ✅ Main navigation works correctly
+   - ✅ Search functionality displays relevant AI agents
+   - ✅ Agent cards display properly with descriptions and tags
+   - ✅ Responsive design works on different screen sizes
+
+2. **MCP Servers Page (/mcps)**
+   - ✅ Successfully syncs MCPs from directory
+   - ✅ Displays comprehensive list of MCP servers (31 pages)
+   - ✅ Search functionality works (tested with "github")
+   - ✅ Pagination controls work correctly
+   - ✅ Filter buttons (Latest, Popular, all_categories) are present
+   - ✅ Each MCP shows description, tags, and GitHub links
+
+3. **Rules Page (/rules)**
+   - ✅ Displays coding rules and best practices
+   - ✅ Category filtering works (TypeScript, Python, Next.js, etc.)
+   - ✅ Search functionality for rules
+   - ✅ Proper categorization and tagging
+   - ✅ Shows engagement metrics (likes, views)
+
+4. **Database Integration**
+   - ✅ MongoDB connection working
+   - ✅ MCP data persistence
+   - ✅ Bulk upsert operations for avoiding duplicates
+
+5. **API Endpoints**
+   - ✅ `/api/mcps` - Successfully fetches and stores MCP data
+   - ✅ Proper error handling and validation
+
+### ❌ Issues Found
+
+1. **Trending Page (404 Error)**
+   - **Issue**: Navigation link exists but page returns 404
+   - **URL**: `/trending`
+   - **Status**: Not implemented
+   - **Priority**: Medium
+
+2. **Non-functional Buttons**
+   - **Issue**: Several buttons don't have click handlers implemented:
+     - "Create Your First Agent" button
+     - "Create Agent" button
+     - Agent action buttons ("try", "install")
+   - **Impact**: Users cannot create or interact with agents
+   - **Priority**: High
+
+3. **Missing Agent Creation Flow**
+   - **Issue**: No agent creation interface or workflow
+   - **Expected**: Form or wizard for creating new agents
+   - **Status**: Not implemented
+   - **Priority**: High
+
+### 🔧 Technical Improvements Made
+
+1. **Fixed MCP Validation Error**
+   - Made `company_id` field optional in MCP schema
+   - Resolved validation failures during sync
+
+2. **Fixed Duplicate Key Error**
+   - Implemented `bulkWrite` with `upsert: true`
+   - Removed unique index constraint on `id` field
+   - Prevents errors when syncing existing MCPs
+
+3. **Server Restart Handling**
+   - Ensured model changes are applied after server restart
+   - Proper cache invalidation
+
 ## Project Structure
 
 ```
 src/
-├── app/                 # Next.js app directory
-│   ├── api/            # API routes
-│   │   ├── agents/     # Agent CRUD operations
-│   │   ├── auth/       # Authentication endpoints
-│   │   ├── categories/ # Category management
-│   │   └── search/     # Search functionality
-│   ├── login/          # Login page
-│   └── page.tsx        # Home page
-├── components/         # Reusable React components
-│   ├── AgentCard.tsx
-│   ├── CategoryFilter.tsx
-│   ├── CreateAgentModal.tsx
-│   └── Header.tsx
-├── contexts/           # React contexts
-│   └── AuthContext.tsx
-├── lib/                # Utility libraries
-│   └── mongodb.ts
-├── models/             # Mongoose models
-│   ├── Agent.ts
-│   └── User.ts
-└── types/              # TypeScript type definitions
-    ├── agent.ts
-    └── search.ts
+├── app/
+│   ├── api/
+│   │   └── mcps/
+│   │       └── route.ts          # MCP API endpoints
+│   ├── mcps/
+│   │   └── page.tsx              # MCP servers page
+│   ├── rules/
+│   │   └── page.tsx              # Rules page
+│   ├── globals.css               # Global styles
+│   ├── layout.tsx                # Root layout
+│   └── page.tsx                  # Home page
+├── components/
+│   ├── CreateRuleModal.tsx       # Rule creation modal
+│   └── ui/                       # Reusable UI components
+├── contexts/
+│   └── SearchContext.tsx         # Search state management
+├── lib/
+│   └── mongodb.ts                # Database connection
+├── models/
+│   └── MCP.ts                    # MCP data model
+└── types/
+    ├── agent.ts                  # Agent type definitions
+    └── search.ts                 # Search type definitions
 ```
 
-## API Endpoints
+## Environment Variables
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
+```bash
+MONGODB_URI=mongodb://localhost:27017/trueagents
+```
 
-### Agents
-- `GET /api/agents` - Get all agents with filtering and sorting
-- `POST /api/agents` - Create a new agent
-- `GET /api/agents/[id]` - Get agent by ID
-- `PUT /api/agents/[id]` - Update agent
-- `DELETE /api/agents/[id]` - Delete agent
-- `POST /api/agents/[id]/run` - Execute agent
+## Deployment
 
-### Categories
-- `GET /api/categories` - Get all available categories
+The application is ready for deployment on platforms like Vercel, Netlify, or any Node.js hosting service.
 
-### Search
-- `GET /api/search` - Search agents by query
+### Vercel Deployment
 
-## Agent Types
-
-### Prompt-based Agents
-Simple agents created with a text prompt that defines their behavior.
-
-### Custom LLM Agents
-Advanced agents with custom configurations including:
-- Model selection
-- Temperature settings
-- Max tokens
-- System prompts
-- Custom API endpoints
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
 ## Contributing
 
@@ -127,19 +182,8 @@ Advanced agents with custom configurations including:
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License - see LICENSE file for details.
 
-## Test Results
+## Support
 
-*Test results will be documented here after testing phase*
-
-## Deployment
-
-This application can be deployed on various platforms including Vercel, Netlify, or any Node.js hosting service.
-
-### Environment Variables for Production
-
-Ensure the following environment variables are set:
-- `MONGODB_URI`: MongoDB connection string
-- `JWT_SECRET`: Secret key for JWT token signing
-- `NODE_ENV`: Set to 'production'
+For issues and questions, please create an issue in the GitHub repository.

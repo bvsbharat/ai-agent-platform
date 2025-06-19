@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150">
+  <style>
+    .logo-text { 
+      fill: hsl(var(--foreground, 0 0% 20%)); 
+      font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-rendering: optimizeLegibility;
+    }
+  </style>
+  <!-- Iron Man Style Robotic Icon -->
+  <g transform="translate(15, 20) scale(1.8)">
+    <!-- Main Head/Helmet -->
+    <path d="M30 10 Q40 10 45 20 Q45 35 40 40 Q30 45 20 40 Q15 35 15 20 Q20 10 30 10 Z" fill="#DC143C" stroke="#8B0000" stroke-width="1"/>
+    
+    <!-- Face Plate -->
+    <path d="M30 15 Q37 15 40 22 Q40 32 37 35 Q30 38 23 35 Q20 32 20 22 Q23 15 30 15 Z" fill="#FFD700" stroke="#DAA520" stroke-width="0.5"/>
+    
+    <!-- Eye Slits (Glowing Blue) -->
+    <ellipse cx="26" cy="24" rx="3" ry="2" fill="#00BFFF" opacity="0.9"/>
+    <ellipse cx="34" cy="24" rx="3" ry="2" fill="#00BFFF" opacity="0.9"/>
+    
+    <!-- Arc Reactor Glow Effect -->
+    <circle cx="26" cy="24" r="2" fill="#87CEEB" opacity="0.6"/>
+    <circle cx="34" cy="24" r="2" fill="#87CEEB" opacity="0.6"/>
+    
+    <!-- Mouth/Breathing Apparatus -->
+    <rect x="28" y="28" width="4" height="6" rx="2" fill="#2F4F4F" stroke="#1C1C1C" stroke-width="0.5"/>
+    
+    <!-- Helmet Details/Panels -->
+    <line x1="20" y1="18" x2="22" y2="20" stroke="#8B0000" stroke-width="0.5"/>
+    <line x1="38" y1="18" x2="40" y2="20" stroke="#8B0000" stroke-width="0.5"/>
+    <line x1="20" y1="32" x2="22" y2="34" stroke="#8B0000" stroke-width="0.5"/>
+    <line x1="38" y1="32" x2="40" y2="34" stroke="#8B0000" stroke-width="0.5"/>
+    
+    <!-- Chin Guard -->
+    <path d="M25 35 Q30 38 35 35 Q35 40 30 42 Q25 40 25 35" fill="#B22222" stroke="#8B0000" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Text: SuperAgents (Enhanced Typography) -->
+  <text x="120" y="92" font-size="52" class="logo-text">SuperAgents</text>
+</svg>

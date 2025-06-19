@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Plus, TrendingUp, Clock, ExternalLink, Download, Star } from 'lucide-react';
 import Header from '@/components/Header';
 import CategoryFilter from '@/components/CategoryFilter';
+import Image from 'next/image';
+import LoadingSpinner, { GridSkeleton } from '@/components/LoadingSpinner';
 
 interface MCP {
   _id: string;
@@ -66,9 +68,11 @@ export default function MCPsPage() {
     hasNext: false,
     hasPrev: false
   });
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef<IntersectionObserver>();
 
-  const fetchMCPs = async (sort: string = 'newest', search: string = '', category: string = 'All', page: number = 1) => {
-    setLoading(true);
+  const fetchMCPs = useCallback(async (sort: string = 'newest', search: string = '', category: string = 'All', page: number = 1, append: boolean = false) => {
+    if (!append) setLoading(true);
     try {
       const params = new URLSearchParams({
         sort,
@@ -82,14 +86,29 @@ export default function MCPsPage() {
       const response = await fetch(`/api/mcps?${params}`);
       const data: MCPsResponse = await response.json();
       
-      setMcps(data.mcps || []);
-      setPagination(data.pagination);
+      if (append) {
+        setMcps(prev => [...prev, ...(data.mcps || [])]);
+      } else {
+        setMcps(data.mcps || []);
+      }
+      
+      setPagination(data.pagination || {
+        page: 1,
+        limit: 12,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false
+      });
+      
+      setHasMore(data.pagination?.hasNext || false);
     } catch (error) {
       console.error('Error fetching MCPs:', error);
+      if (!append) setMcps([]);
     } finally {
-      setLoading(false);
+      if (!append) setLoading(false);
     }
-  };
+  }, []);
 
   const syncMCPs = async () => {
     setSyncing(true);
@@ -114,18 +133,30 @@ export default function MCPsPage() {
     let sort = 'newest';
     if (activeTab === 'trending') sort = 'trending';
     
-    fetchMCPs(sort, searchQuery, selectedCategory, 1);
-  }, [activeTab, searchQuery, selectedCategory]);
+    // Use setTimeout to prevent blocking navigation
+    const timeoutId = setTimeout(() => {
+      fetchMCPs(sort, searchQuery, selectedCategory, 1);
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [activeTab, searchQuery, selectedCategory, fetchMCPs]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setActiveTab('search');
   };
 
-  const handlePageChange = (newPage: number) => {
-    const sort = activeTab === 'trending' ? 'trending' : 'newest';
-    fetchMCPs(sort, searchQuery, selectedCategory, newPage);
-  };
+  const lastMCPElementRef = useCallback((node: HTMLDivElement) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        const sort = activeTab === 'trending' ? 'trending' : 'newest';
+        fetchMCPs(sort, searchQuery, selectedCategory, pagination.page + 1, true);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore, activeTab, searchQuery, selectedCategory, pagination.page]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -190,49 +221,24 @@ export default function MCPsPage() {
         />
 
         {/* MCPs Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="card p-6 animate-pulse">
-                <div className="h-4 bg-muted rounded mb-4"></div>
-                <div className="h-3 bg-muted rounded mb-2"></div>
-                <div className="h-3 bg-muted rounded mb-4"></div>
-                <div className="flex gap-2 mb-4">
-                  <div className="h-6 w-16 bg-muted rounded"></div>
-                  <div className="h-6 w-16 bg-muted rounded"></div>
-                </div>
-                <div className="h-8 bg-muted rounded"></div>
-              </div>
-            ))}
-          </div>
+        {loading && mcps.length === 0 ? (
+          <GridSkeleton count={8} />
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-              {mcps.map((mcp) => (
-                <MCPCard key={mcp._id} mcp={mcp} />
-              ))}
+              {mcps.map((mcp, index) => {
+                if (mcps.length === index + 1) {
+                  return <MCPCard ref={lastMCPElementRef} key={mcp._id} mcp={mcp} />;
+                } else {
+                  return <MCPCard key={mcp._id} mcp={mcp} />;
+                }
+              })}
             </div>
 
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={!pagination.hasPrev}
-                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <span className="text-muted-foreground">
-                  Page {pagination.page} of {pagination.totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={!pagination.hasNext}
-                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
+            {/* Loading indicator for lazy loading */}
+            {loading && mcps.length > 0 && (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner size="md" />
               </div>
             )}
           </>
@@ -256,27 +262,67 @@ export default function MCPsPage() {
   );
 }
 
-function MCPCard({ mcp }: { mcp: MCP }) {
+const MCPCard = React.forwardRef<HTMLDivElement, { mcp: MCP }>(({ mcp }, ref) => {
   return (
-    <div className="card p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="font-semibold text-foreground mb-2 font-mono">
+    <div ref={ref} className="card p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] h-full flex flex-col relative overflow-hidden">
+      {/* Category Badge */}
+      <div className="absolute top-4 right-4">
+        <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium border border-primary/20">
+          {mcp.category}
+        </span>
+      </div>
+
+      {/* Header with Logo and Name */}
+      <div className="flex items-start gap-3 mb-4 pr-20">
+        {/* MCP Logo */}
+        <div className="flex-shrink-0">
+          {mcp.logo ? (
+            <Image
+              src={mcp.logo}
+              alt={`${mcp.name} logo`}
+              width={40}
+              height={40}
+              className="rounded-lg shadow-sm"
+              onError={(e) => {
+                e.currentTarget.src = '/mcp-logo.svg';
+              }}
+            />
+          ) : (
+            <Image
+              src="/mcp-logo.svg"
+              alt="MCP logo"
+              width={40}
+              height={40}
+              className="rounded-lg shadow-sm"
+            />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-foreground mb-2 font-mono text-base truncate">
             {mcp.name}
           </h3>
-          <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-            {mcp.description}
-          </p>
         </div>
+      </div>
+
+      {/* Full Width Description */}
+      <div className="mb-6">
+        <p className="text-sm text-muted-foreground leading-relaxed" style={{
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden'
+        }}>
+          {mcp.description}
+        </p>
       </div>
 
       {/* Tags */}
       {mcp.tags && mcp.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-4">
+        <div className="flex flex-wrap gap-2 mb-6">
           {mcp.tags.slice(0, 3).map((tag, index) => (
             <span
               key={index}
-              className="px-2 py-1 text-xs bg-muted text-muted-foreground rounded font-mono"
+              className="px-3 py-1 text-xs rounded-full font-medium border bg-muted text-muted-foreground border-border transition-colors hover:scale-105"
             >
               {tag}
             </span>
@@ -284,34 +330,24 @@ function MCPCard({ mcp }: { mcp: MCP }) {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1">
-            <Download className="w-4 h-4" />
-            {mcp.installCount || 0}
-          </span>
-          <span className="px-2 py-1 bg-muted rounded text-xs">
-            {mcp.category}
-          </span>
-        </div>
-        <span className="text-xs">
-          {mcp.plan}
-        </span>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2">
+      {/* Actions with Install Count */}
+      <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50">
         <a
           href={mcp.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary flex-1 text-center flex items-center justify-center gap-2"
+          className="btn-install text-xs px-4 py-2 rounded-full flex items-center gap-2 font-medium transition-all hover:scale-105"
         >
-          <ExternalLink className="w-4 h-4" />
-          View on GitHub
+          <Download className="w-3.5 h-3.5" />
+          Install
         </a>
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <Download className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">{mcp.installCount || 0}</span>
+        </div>
       </div>
     </div>
   );
-}
+});
+
+MCPCard.displayName = 'MCPCard';
