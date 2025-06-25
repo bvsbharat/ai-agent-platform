@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Plus,
-  TrendingUp,
+  Calendar,
   ArrowRight,
   Bot,
   Zap,
@@ -209,16 +209,16 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Trending MCPs Section */}
+        {/* MCPs Section */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold font-mono flex items-center gap-3">
                 <Zap className="w-8 h-8 text-primary" />
-                Trending MCPs
+                MCPs
               </h2>
               <p className="text-muted-foreground mt-2 font-mono">
-                {"// Most downloaded Model Context Protocols"}
+                {"// Model Context Protocols"}
               </p>
             </div>
             <Link
@@ -245,7 +245,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold font-mono flex items-center gap-3">
-                <TrendingUp className="w-8 h-8 text-primary" />
+                <Bot className="w-8 h-8 text-primary" />
                 Agents
               </h2>
               <p className="text-muted-foreground mt-2 font-mono">

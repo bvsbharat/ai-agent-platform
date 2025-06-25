@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#1e293b" />
+  <text x="400" y="300" font-family="Arial" font-size="32" fill="#94a3b8" text-anchor="middle" dominant-baseline="middle">Hackathon Image Placeholder</text>
+  <path d="M400 200 L450 275 L400 350 L350 275 Z" fill="#3b82f6" />
+  <circle cx="400" cy="200" r="15" fill="#3b82f6" />
+  <circle cx="450" cy="275" r="15" fill="#3b82f6" />
+  <circle cx="400" cy="350" r="15" fill="#3b82f6" />
+  <circle cx="350" cy="275" r="15" fill="#3b82f6" />
+</svg>

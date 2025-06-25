@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#0f172a" />
+  
+  <!-- Background pattern -->
+  <g opacity="0.1">
+    <circle cx="100" cy="100" r="50" fill="#4f46e5" />
+    <circle cx="700" cy="500" r="70" fill="#4f46e5" />
+    <circle cx="200" cy="400" r="30" fill="#4f46e5" />
+    <circle cx="600" cy="200" r="40" fill="#4f46e5" />
+  </g>
+  
+  <!-- DeployCon Logo -->
+  <g transform="translate(400, 250)">
+    <rect x="-150" y="-60" width="300" height="120" rx="10" fill="#4f46e5" />
+    <text x="0" y="0" font-family="Arial" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">DEPLOYCON</text>
+    <text x="0" y="40" font-family="Arial" font-size="20" fill="white" text-anchor="middle" dominant-baseline="middle">LIVE STREAM</text>
+  </g>
+  
+  <!-- Date and Time -->
+  <text x="400" y="350" font-family="Arial" font-size="24" fill="#94a3b8" text-anchor="middle">June 21, 2023 • 10:30 AM</text>
+  
+  <!-- Decorative elements -->
+  <g fill="none" stroke="#4f46e5" stroke-width="2">
+    <path d="M50,50 L100,50 L100,100 L50,100 Z" />
+    <path d="M700,50 L750,50 L750,100 L700,100 Z" />
+    <path d="M50,500 L100,500 L100,550 L50,550 Z" />
+    <path d="M700,500 L750,500 L750,550 L700,550 Z" />
+  </g>
+</svg>

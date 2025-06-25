@@ -9,7 +9,7 @@ import {
   Bot,
   Zap,
   Shield,
-  TrendingUp,
+  Calendar,
   Settings,
   User,
   LogOut,
@@ -85,11 +85,11 @@ export default function Header({}: HeaderProps) {
                 MCPs
               </button>
               <button
-                onClick={() => navigateWithPreload("/trending")}
+                onClick={() => navigateWithPreload("/hackathon")}
                 className="text-muted-foreground hover:text-primary px-3 py-2 text-sm font-medium font-mono transition-colors flex items-center gap-2"
               >
-                <TrendingUp className="w-4 h-4" />
-                Trending
+                <Calendar className="w-4 h-4" />
+                Hackathon
               </button>
             </nav>
 
@@ -227,13 +227,13 @@ export default function Header({}: HeaderProps) {
             </button>
             <button
               onClick={() => {
-                navigateWithPreload("/trending");
+                navigateWithPreload("/hackathon");
                 setIsMobileMenuOpen(false);
               }}
               className="block w-full text-left text-muted-foreground hover:text-primary px-3 py-2 text-base font-medium font-mono transition-colors flex items-center gap-2"
             >
-              <TrendingUp className="w-4 h-4" />
-              trending
+              <Calendar className="w-4 h-4" />
+              hackathon
             </button>
 
             <div className="pt-4 border-t border-border space-y-3">
