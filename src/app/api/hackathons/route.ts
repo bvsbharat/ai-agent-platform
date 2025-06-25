@@ -26,10 +26,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey)
 
 // GET /api/hackathons - Fetch hackathons with filtering and pagination
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(_request.url)
     
     const location = searchParams.get('location')
     const limit = parseInt(searchParams.get('limit') || '12')
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Save hackathons to database
-    const result = await saveHackathonsToDatabase(hackathons)
+    await saveHackathonsToDatabase(hackathons)
     
     return NextResponse.json({
       message: `Successfully scraped and saved ${hackathons.length} hackathons`,
@@ -156,7 +156,7 @@ async function scrapeDevpost() {
   console.log('Starting Devpost hackathon scraping...')
   
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
   })
   
   try {
@@ -197,7 +197,7 @@ async function scrapeDevpost() {
         
         // Parse date information
         let date = new Date().toISOString().split('T')[0] // Default to today
-        let time = '12:00 PM' // Default time
+        const time = '12:00 PM' // Default time
         
         if (dateText.includes('Ends')) {
           // Extract end date if available

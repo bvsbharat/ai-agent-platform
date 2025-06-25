@@ -26,7 +26,7 @@ async function scrapeDevpost() {
   console.log('Starting Devpost hackathon scraping...');
   
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
   });
   
   try {
@@ -67,7 +67,7 @@ async function scrapeDevpost() {
         
         // Parse date information
         let date = new Date().toISOString().split('T')[0]; // Default to today
-        let time = '12:00 PM'; // Default time
+        const time = '12:00 PM'; // Default time
         
         if (dateText.includes('Ends')) {
           // Extract end date if available

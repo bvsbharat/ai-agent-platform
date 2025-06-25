@@ -8,8 +8,8 @@
  * 2. Run: node src/scripts/scrape-hackathons.js
  */
 
-const puppeteer = require('puppeteer');
-const { createClient } = require('@supabase/supabase-js');
+import puppeteer from 'puppeteer';
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

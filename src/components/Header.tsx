@@ -13,6 +13,7 @@ import {
   Settings,
   User,
   LogOut,
+  Plus,
 } from "lucide-react";
 import ThemeSelector, { CompactThemeSelector } from "./ThemeSelector";
 import LoginModal from "./LoginModal";
@@ -43,14 +44,17 @@ export default function Header({}: HeaderProps) {
             <Link href="/" className="flex-shrink-0 flex flex-col items-center">
               <div className="flex items-center">
                 <span className="text-sm text-foreground font-mono">the</span>
-                <Image
-                  src="/superagents-text-logo.svg"
-                  alt="SuperAgents"
-                  width={240}
-                  height={64}
-                  className="h-12 w-auto"
-                  priority
-                />
+                <div className="flex items-center">
+                  <Image
+                    src="/superagents-text-logo.svg"
+                    alt="SuperAgents"
+                    width={240}
+                    height={64}
+                    className="h-12 w-auto"
+                    priority
+                  />
+                  <Plus className="w-5 h-5 ml-1 text-primary" />
+                </div>
               </div>
             </Link>
           </div>

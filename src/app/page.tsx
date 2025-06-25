@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Calendar, ArrowRight, Bot, Zap, User } from "lucide-react";
+import { Analytics } from "@vercel/analytics/next";
+import { Plus, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  Calendar, 
+  ArrowRight, Bot, Zap, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import MCPCard from "@/components/MCPCard";
 import Header from "@/components/Header";
 import LoginModal from "@/components/LoginModal";
@@ -54,12 +59,12 @@ export default function Home() {
   const [trendingMCPs, setTrendingMCPs] = useState<MCP[]>([]);
   // const [trendingRules, setTrendingRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  // Destructuring but not using authLoading
-  const {
-    /* loading: authLoading */
-  } = useAuth();
+  // Get user and loading state from auth context
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { user, loading: authLoading } = useAuth();
 
   const fetchTrendingData = useCallback(async () => {
     setLoading(true);
@@ -148,10 +153,13 @@ export default function Home() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in"
             style={{ animationDelay: "0.3s" }}
           >
-            <div className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8 opacity-70 cursor-not-allowed hover:scale-105 transition-transform">
+            <button
+              disabled
+              className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8 opacity-70 cursor-not-allowed"
+            >
               <Bot className="w-5 h-5" />
-              Agents (Coming Soon)
-            </div>
+              Publish Your Agent (Coming Soon)
+            </button>
             <Link
               href="/mcps"
               className="btn-secondary inline-flex items-center gap-2 text-lg py-3 px-8 hover:scale-105 transition-transform"
@@ -301,17 +309,22 @@ export default function Home() {
             app development
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <div className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8">
+            <button
+              disabled
+              className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8 opacity-70 cursor-not-allowed"
+            >
               <Plus className="w-5 h-5" />
-              Create Your Agent
-            </div>
-            <Link
-              href="/mcps"
-              className="btn-secondary inline-flex items-center gap-2 text-lg py-3 px-8"
+              Create Your Agent (Coming Soon)
+            </button>
+            <button
+              onClick={() =>
+                user ? router.push("/members") : setIsLoginModalOpen(true)
+              }
+              className="btn-secondary inline-flex items-center gap-2 text-lg py-3 px-8 cursor-pointer"
             >
               <User className="w-5 h-5" />
               Join Community
-            </Link>
+            </button>
           </div>
         </section>
       </main>
@@ -325,6 +338,7 @@ export default function Home() {
           fetchTrendingData();
         }}
       />
+      <Analytics />
     </div>
   );
 }
