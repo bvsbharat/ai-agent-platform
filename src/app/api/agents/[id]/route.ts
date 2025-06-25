@@ -1,7 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Agent from '@/models/Agent';
-import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
 // GET /api/agents/[id] - Get a specific agent
 export async function GET(
@@ -9,33 +7,30 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-    const params = await context.params;
+    const supabase = await createServerSupabaseClient()
+    const params = await context.params
     
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { error: 'Invalid agent ID' },
-        { status: 400 }
-      );
-    }
+    // Get agent by ID
+    const { data: agent, error } = await supabase
+      .from('agents')
+      .select('*')
+      .eq('id', params.id)
+      .single()
 
-    const agent = await Agent.findById(params.id)
-      .select('-customLLMConfig.apiEndpoint') // Hide sensitive data
-      .lean();
-
-    if (!agent) {
+    if (error || !agent) {
       return NextResponse.json(
         { error: 'Agent not found' },
         { status: 404 }
-      );
+      )
     }
 
     // Increment view count
-    await Agent.findByIdAndUpdate(params.id, {
-      $inc: { 'metrics.views': 1 }
-    });
+    await supabase
+      .from('agents')
+      .update({ views: agent.views + 1 })
+      .eq('id', params.id)
 
-    return NextResponse.json(agent);
+    return NextResponse.json(agent)
   } catch (error) {
     console.error('Error fetching agent:', error);
     return NextResponse.json(
@@ -51,41 +46,40 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-    const params = await context.params;
+    const supabase = await createServerSupabaseClient()
+    const params = await context.params
     
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { error: 'Invalid agent ID' },
-        { status: 400 }
-      );
-    }
+    const body = await request.json()
+    const updateData = { ...body }
 
-    const body = await request.json();
-    const updateData = { ...body };
-
-    // If publishing for the first time, set publishedAt
-    if (updateData.deploymentStatus === 'published') {
-      const currentAgent = await Agent.findById(params.id);
-      if (currentAgent && !currentAgent.publishedAt) {
-        updateData.publishedAt = new Date();
+    // If publishing for the first time, set published_at
+    if (updateData.is_public === true) {
+      const { data: currentAgent } = await supabase
+        .from('agents')
+        .select('published_at')
+        .eq('id', params.id)
+        .single()
+      
+      if (currentAgent && !currentAgent.published_at) {
+        updateData.published_at = new Date().toISOString()
       }
     }
 
-    const agent = await Agent.findByIdAndUpdate(
-      params.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-customLLMConfig.apiEndpoint');
+    const { data: agent, error } = await supabase
+      .from('agents')
+      .update(updateData)
+      .eq('id', params.id)
+      .select()
+      .single()
 
-    if (!agent) {
+    if (error || !agent) {
       return NextResponse.json(
         { error: 'Agent not found' },
         { status: 404 }
-      );
+      )
     }
 
-    return NextResponse.json(agent);
+    return NextResponse.json(agent)
   } catch (error) {
     console.error('Error updating agent:', error);
     return NextResponse.json(
@@ -101,26 +95,22 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-    const params = await context.params;
+    const supabase = await createServerSupabaseClient()
+    const params = await context.params
     
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { error: 'Invalid agent ID' },
-        { status: 400 }
-      );
-    }
+    const { error } = await supabase
+      .from('agents')
+      .delete()
+      .eq('id', params.id)
 
-    const agent = await Agent.findByIdAndDelete(params.id);
-
-    if (!agent) {
+    if (error) {
       return NextResponse.json(
         { error: 'Agent not found' },
         { status: 404 }
-      );
+      )
     }
 
-    return NextResponse.json({ message: 'Agent deleted successfully' });
+    return NextResponse.json({ message: 'Agent deleted successfully' })
   } catch (error) {
     console.error('Error deleting agent:', error);
     return NextResponse.json(

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase'
 
-// GET /api/agents - Fetch agents with filtering and sorting
+// GET /api/rules - Fetch rules with filtering and sorting
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -15,9 +15,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     let query = supabase
-      .from('agents')
+      .from('rules')
       .select('*', { count: 'exact' })
-      .eq('is_public', true)
 
     // Apply filters
     if (category && category !== 'all') {
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
     
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
     }
 
     // Apply sorting
@@ -34,7 +33,7 @@ export async function GET(request: NextRequest) {
         query = query.order('views', { ascending: false })
         break
       case 'popular':
-        query = query.order('likes', { ascending: false })
+        query = query.order('votes', { ascending: false })
         break
       case 'newest':
       default:
@@ -45,16 +44,21 @@ export async function GET(request: NextRequest) {
     // Apply pagination
     query = query.range(offset, offset + limit - 1)
 
-    const { data: agents, error, count } = await query
+    const { data: rules, error, count } = await query
 
     if (error) {
+      console.error('Supabase query error:', error)
       throw error
     }
+
+    console.log('Supabase returned rules:', rules)
+    console.log('Rules count:', count)
+    console.log('First rule sample:', rules?.[0])
 
     const totalPages = Math.ceil((count || 0) / limit)
 
     return NextResponse.json({
-      agents,
+      rules,
       pagination: {
         page,
         limit,
@@ -65,15 +69,15 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching agents:', error)
+    console.error('Error fetching rules:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch agents' },
+      { error: 'Failed to fetch rules' },
       { status: 500 }
     )
   }
 }
 
-// POST /api/agents - Create a new agent
+// POST /api/rules - Create a new rule
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -87,20 +91,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      name,
-      description,
-      category,
-      prompt,
-      model,
-      temperature,
-      max_tokens,
-      tags,
-      is_public = false
-    } = body
+    const { title, description, category, tags, content } = body
 
     // Validation
-    if (!name || !description || !category) {
+    if (!title || !description || !category || !content) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -114,20 +108,16 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const { data: agent, error } = await supabase
-      .from('agents')
+    const { data: rule, error } = await supabase
+      .from('rules')
       .insert({
-        name,
+        title,
         description,
         category,
         author_id: user.id,
         author_name: profile?.name || user.email || '',
-        prompt,
-        model: model || 'gpt-4',
-        temperature: temperature || 0.7,
-        max_tokens: max_tokens || 2000,
         tags: tags || [],
-        is_public
+        content
       })
       .select()
       .single()
@@ -136,11 +126,11 @@ export async function POST(request: NextRequest) {
       throw error
     }
 
-    return NextResponse.json({ agent })
+    return NextResponse.json({ rule })
   } catch (error) {
-    console.error('Error creating agent:', error)
+    console.error('Error creating rule:', error)
     return NextResponse.json(
-      { error: 'Failed to create agent' },
+      { error: 'Failed to create rule' },
       { status: 500 }
     )
   }

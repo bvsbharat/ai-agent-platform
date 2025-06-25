@@ -1,29 +1,31 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Agent from '@/models/Agent';
+import { NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
 // GET /api/categories - Get all available categories with agent counts
 export async function GET() {
   try {
-    await connectDB();
+    const supabase = await createServerSupabaseClient()
 
     // Get all categories with their agent counts
-    const categoryCounts = await Agent.aggregate([
-      {
-        $match: {
-          deploymentStatus: 'published'
-        }
-      },
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { _id: 1 }
-      }
-    ]);
+    const { data: agents, error } = await supabase
+      .from('agents')
+      .select('category')
+      .eq('is_public', true)
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch categories' },
+        { status: 500 }
+      )
+    }
+
+    // Count agents by category
+    const categoryCounts = agents?.reduce((acc: Record<string, number>, agent: { category: string }) => {
+      const category = agent.category
+      acc[category] = (acc[category] || 0) + 1
+      return acc
+    }, {} as Record<string, number>) || {}
 
     // Define all available categories
     const allCategories = [
@@ -42,15 +44,14 @@ export async function GET() {
 
     // Create category objects with counts
     const categories = allCategories.map(category => {
-      const categoryData = categoryCounts.find(c => c._id === category);
       return {
         name: category,
-        count: categoryData ? categoryData.count : 0
-      };
-    });
+        count: categoryCounts[category] || 0
+      }
+    })
 
     // Calculate total count
-    const totalCount = categoryCounts.reduce((sum, cat) => sum + cat.count, 0);
+    const totalCount = Object.values(categoryCounts).reduce((sum: number, count: number) => sum + count, 0)
 
     // Add "All" category at the beginning
     const categoriesWithAll = [

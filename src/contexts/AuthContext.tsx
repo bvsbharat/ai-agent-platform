@@ -1,21 +1,27 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: string;
-}
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { createClientSupabaseClient } from "@/lib/supabase";
+import { User, Session } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  isLoading: boolean;
+  session: Session | null;
+  signUp: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signOut: () => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -34,101 +40,86 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClientSupabaseClient();
 
   useEffect(() => {
-    // Check for stored token on mount
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('auth_user');
-    
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-      }
-    }
-    
-    setIsLoading(false);
-  }, []);
+    // Get initial session
+    const getInitialSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    getInitialSession();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+
+      if (event === "SIGNED_IN") {
+        router.refresh();
+      }
+      if (event === "SIGNED_OUT") {
+        router.push("/");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth, router]);
+
+  const signUp = async (email: string, password: string, name: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
         },
-        body: JSON.stringify({ email, password, action: 'login' }),
-      });
+      },
+    });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
-        return { success: true };
-      } else {
-        return { success: false, error: data.error || 'Login failed' };
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: 'Network error occurred' };
+    if (error) {
+      return { error: error.message };
     }
+
+    return {};
   };
 
-  const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password, action: 'register' }),
-      });
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
-        return { success: true };
-      } else {
-        return { success: false, error: data.error || 'Registration failed' };
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: 'Network error occurred' };
+    if (error) {
+      return { error: error.message };
     }
+
+    return {};
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
 
-  const value: AuthContextType = {
+  const value = {
     user,
-    token,
-    login,
-    register,
-    logout,
-    isLoading,
+    session,
+    signUp,
+    signIn,
+    signOut,
+    loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

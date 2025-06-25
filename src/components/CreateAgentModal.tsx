@@ -268,7 +268,7 @@ export default function CreateAgentModal({
                   <span className="font-medium text-foreground font-mono">simple_prompt</span>
                 </div>
                 <p className="text-sm text-muted-foreground font-mono">
-                  // create agent with prompt description
+                  {"// create agent with prompt description"}
                 </p>
               </button>
 
@@ -286,7 +286,7 @@ export default function CreateAgentModal({
                   <span className="font-medium text-foreground font-mono">custom_llm</span>
                 </div>
                 <p className="text-sm text-muted-foreground font-mono">
-                  // configure custom LLM settings
+                  {"// configure custom LLM settings"}
                 </p>
               </button>
             </div>

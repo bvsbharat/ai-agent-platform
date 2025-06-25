@@ -1,207 +1,157 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import MCP from '@/models/MCP';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/supabase'
 
-const SUPABASE_URL = 'https://knhgkaawjfqqwmsgmxns.supabase.co/rest/v1/mcps';
-const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuaGdrYWF3amZxcXdtc2dteG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NDAzMTksImV4cCI6MjA1NTIxNjMxOX0.1Uc-at_fT0Tf1MsNuewJf1VR0yiynPzrPvF0uWvTNnk';
-const AUTHORIZATION = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuaGdrYWF3amZxcXdtc2dteG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NDAzMTksImV4cCI6MjA1NTIxNjMxOX0.1Uc-at_fT0Tf1MsNuewJf1VR0yiynPzrPvF0uWvTNnk';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+// Unused but kept for reference
+// const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-// Fetch MCPs from Supabase and sync to MongoDB
-export async function POST() {
+// Use anon key for read operations
+// const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Use service role key for write operations (bypasses RLS)
+const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey)
+
+// POST /api/mcps - Sync MCP data from third-party API
+export async function POST(_request: NextRequest) {
   try {
-    await connectDB();
+    // Use the Cursor Directory Supabase API
+    const apiUrl = 'https://knhgkaawjfqqwmsgmxns.supabase.co/rest/v1/mcps?select=*&active=eq.true&order=company_id.asc.nullslast&limit=100'
+    const authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuaGdrYWF3amZxcXdtc2dteG5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2NDAzMTksImV4cCI6MjA1NTIxNjMxOX0.1Uc-at_fT0Tf1MsNuewJf1VR0yiynPzrPvF0uWvTNnk'
 
-    let allMCPs = [];
-    let offset = 0;
-    const limit = 72;
-    let hasMore = true;
-
-    // Fetch all MCPs with pagination
-    while (hasMore) {
-      const url = `${SUPABASE_URL}?select=*&active=eq.true&order=company_id.asc.nullslast&limit=${limit}&offset=${offset}`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'apikey': API_KEY,
-          'Authorization': AUTHORIZATION,
-          'Origin': 'https://cursor.directory',
-          'Referer': 'https://cursor.directory/',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch MCPs: ${response.statusText}`);
+    // Fetch data from Cursor Directory API
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'apikey': authToken,
+        'Content-Type': 'application/json'
       }
+    })
 
-      const mcps = await response.json();
-      
-      if (mcps.length === 0) {
-        hasMore = false;
-      } else {
-        allMCPs.push(...mcps);
-        offset += limit;
-        
-        // If we got less than the limit, we've reached the end
-        if (mcps.length < limit) {
-          hasMore = false;
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`)
+    }
+
+    const mcps = await response.json()
+    
+    console.log(`Syncing ${mcps.length} MCPs...`)
+    
+    // Process and sync data to our database
+    for (const mcp of mcps) {
+      try {
+        const mcpData = {
+          id: mcp.id || `mcp-${Date.now()}-${Math.random()}`,
+          name: mcp.name || 'Unnamed MCP',
+          description: mcp.description || '',
+          link: mcp.link || '',
+          logo: mcp.logo || '',
+          company_id: mcp.company_id || '',
+          slug: mcp.slug || '',
+          active: mcp.active !== false,
+          plan: mcp.plan || 'free',
+          config: mcp.config || {},
+          synced_at: new Date().toISOString(),
+          downloads: mcp.downloads || 0
         }
+
+        const { error } = await supabaseAdmin.from('mcps').upsert(mcpData, {
+          onConflict: 'id'
+        })
+
+        if (error) {
+          console.error('Error syncing MCP:', error)
+        }
+      } catch (mcpError) {
+        console.error('Error processing MCP:', mcpError)
       }
     }
 
-    // Transform MCPs
-    const transformedMCPs = allMCPs.map(mcp => ({
-      id: mcp.id,
-      name: mcp.name,
-      link: mcp.link,
-      description: mcp.description,
-      logo: mcp.logo || '',
-      company_id: mcp.company_id,
-      slug: mcp.slug,
-      active: mcp.active,
-      plan: mcp.plan,
-      order: mcp.order,
-      fts: mcp.fts,
-      config: mcp.config,
-      owner_id: mcp.owner_id,
-      created_at: new Date(mcp.created_at),
-      installCount: Math.floor(Math.random() * 1000), // Random install count for demo
-      category: extractCategory(mcp.description),
-      tags: extractTags(mcp.fts)
-    }));
+    return NextResponse.json({
+      success: true,
+      synced: mcps.length,
+      message: `Successfully synced ${mcps.length} MCPs`
+    })
 
-    // Use upsert to handle duplicates
-    const bulkOps = transformedMCPs.map(mcp => ({
-      updateOne: {
-        filter: { id: mcp.id },
-        update: { $set: mcp },
-        upsert: true
-      }
-    }));
-    
-    await MCP.bulkWrite(bulkOps);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: `Successfully synced ${allMCPs.length} MCPs`,
-      count: allMCPs.length 
-    });
   } catch (error) {
-    console.error('Error syncing MCPs:', error);
+    console.error('Error syncing MCPs:', error)
     return NextResponse.json(
-      { error: 'Failed to sync MCPs' },
+      { error: 'Failed to sync MCPs', details: error },
       { status: 500 }
-    );
+    )
   }
 }
 
-// Get MCPs with filtering and pagination
+// GET /api/mcps - Fetch MCPs with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category') || '';
-    const sort = searchParams.get('sort') || 'newest';
-
-    // Build query
-    const query: any = { active: true };
+    const supabase = await createServerSupabaseClient()
+    const { searchParams } = new URL(request.url)
     
+    const search = searchParams.get('search')
+    const category = searchParams.get('category')
+    const sort = searchParams.get('sort') || 'newest'
+    const limit = parseInt(searchParams.get('limit') || '12')
+    const page = parseInt(searchParams.get('page') || '1')
+    const offset = (page - 1) * limit
+
+    let query = supabase
+      .from('mcps')
+      .select('*, downloads', { count: 'exact' })
+
+    // Apply filters
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,vendor.ilike.%${search}%`)
     }
     
-    if (category && category !== 'All') {
-      query.category = category;
+    if (category && category !== 'all') {
+      query = query.eq('category', category)
     }
 
-    // Build sort
-    let sortQuery: any = {};
+    // Apply sorting
     switch (sort) {
-      case 'trending':
-        sortQuery = { installCount: -1 };
-        break;
       case 'popular':
-        sortQuery = { installCount: -1 };
-        break;
+        query = query.order('downloads', { ascending: false })
+        break
+      case 'rating':
+        query = query.order('rating', { ascending: false })
+        break
+      case 'name':
+        query = query.order('name', { ascending: true })
+        break
       case 'newest':
       default:
-        sortQuery = { created_at: -1 };
-        break;
+        query = query.order('created_at', { ascending: false })
+        break
     }
 
-    const skip = (page - 1) * limit;
-    
-    const [mcps, total] = await Promise.all([
-      MCP.find(query)
-        .sort(sortQuery)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      MCP.countDocuments(query)
-    ]);
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1)
 
-    const totalPages = Math.ceil(total / limit);
+    const { data: mcps, error, count } = await query
+
+    if (error) {
+      throw error
+    }
+
+    const totalPages = Math.ceil((count || 0) / limit)
 
     return NextResponse.json({
       mcps,
       pagination: {
         page,
         limit,
-        total,
+        total: count,
         totalPages,
         hasNext: page < totalPages,
         hasPrev: page > 1
       }
-    });
+    })
   } catch (error) {
-    console.error('Error fetching MCPs:', error);
+    console.error('Error fetching MCPs:', error)
     return NextResponse.json(
       { error: 'Failed to fetch MCPs' },
       { status: 500 }
-    );
+    )
   }
-}
-
-// Helper function to extract category from description
-function extractCategory(description: string): string {
-  const categories = {
-    'test': 'Testing',
-    'browser': 'Browser',
-    'automation': 'Automation',
-    'api': 'API',
-    'database': 'Database',
-    'ai': 'AI/ML',
-    'development': 'Development',
-    'security': 'Security',
-    'monitoring': 'Monitoring',
-    'deployment': 'Deployment'
-  };
-
-  const lowerDesc = description.toLowerCase();
-  for (const [keyword, category] of Object.entries(categories)) {
-    if (lowerDesc.includes(keyword)) {
-      return category;
-    }
-  }
-  return 'General';
-}
-
-// Helper function to extract tags from fts field
-function extractTags(fts: string): string[] {
-  if (!fts) return [];
-  
-  // Extract words from the fts field and clean them
-  const words = fts.match(/'([^']+)'/g);
-  if (!words) return [];
-  
-  return words
-    .map(word => word.replace(/'/g, ''))
-    .filter(word => word.length > 2)
-    .slice(0, 5); // Limit to 5 tags
 }

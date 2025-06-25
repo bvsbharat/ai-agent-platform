@@ -1,65 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Agent from '@/models/Agent';
-import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
 // POST /api/agents/[id]/like - Like an agent
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const params = await context.params;
   try {
-    await connectDB();
+    const supabase = await createServerSupabaseClient()
+    const params = await context.params
     
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return NextResponse.json(
-        { error: 'Invalid agent ID' },
-        { status: 400 }
-      );
-    }
+    // Get agent by ID
+    const { data: agent, error } = await supabase
+      .from('agents')
+      .select('likes')
+      .eq('id', params.id)
+      .single()
 
-    const body = await request.json();
-    const { userId, action = 'like' } = body; // action can be 'like' or 'unlike'
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const agent = await Agent.findById(params.id);
-
-    if (!agent) {
+    if (error || !agent) {
       return NextResponse.json(
         { error: 'Agent not found' },
         { status: 404 }
-      );
+      )
     }
 
-    if (agent.deploymentStatus !== 'published') {
+    // Increment like count
+    const { error: updateError } = await supabase
+      .from('agents')
+      .update({ likes: agent.likes + 1 })
+      .eq('id', params.id)
+
+    if (updateError) {
       return NextResponse.json(
-        { error: 'Agent is not published' },
-        { status: 400 }
-      );
+        { error: 'Failed to update likes' },
+        { status: 500 }
+      )
     }
 
-    // Update like count based on action
-    const increment = action === 'like' ? 1 : -1;
-    
-    const updatedAgent = await Agent.findByIdAndUpdate(
-      params.id,
-      { $inc: { 'metrics.likes': increment } },
-      { new: true }
-    ).select('metrics.likes');
-
-    return NextResponse.json({
-      agentId: agent._id,
-      action,
-      likes: updatedAgent?.metrics.likes || 0,
-      message: `Agent ${action}d successfully`
-    });
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error updating agent likes:', error);
     return NextResponse.json(

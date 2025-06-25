@@ -1,119 +1,100 @@
-import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/User';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase'
 
-// POST /api/auth - Login user
+// POST /api/auth - Handle authentication
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
-    const body = await request.json();
-    const { email, password, action } = body;
+    const supabase = await createServerSupabaseClient()
+    const body = await request.json()
+    const { email, password, action, name } = body
 
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
-      );
+      )
     }
 
     if (action === 'register') {
       // Register new user
-      const { name } = body;
-      
       if (!name) {
         return NextResponse.json(
           { error: 'Name is required for registration' },
           { status: 400 }
-        );
+        )
       }
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return NextResponse.json(
-          { error: 'User already exists with this email' },
-          { status: 400 }
-        );
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 12);
-
-      // Create new user
-      const user = new User({
-        name,
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password: hashedPassword
-      });
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      })
 
-      await user.save();
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { userId: user._id, email: user.email },
-        process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '7d' }
-      );
+      if (error) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 400 }
+        )
+      }
 
       return NextResponse.json({
         success: true,
-        message: 'User registered successfully',
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          createdAt: user.createdAt
-        }
-      });
+        message: 'User registered successfully. Please check your email for verification.',
+        user: data.user
+      })
     } else {
       // Login existing user
-      const user = await User.findOne({ email });
-      
-      if (!user) {
-        return NextResponse.json(
-          { error: 'Invalid email or password' },
-          { status: 401 }
-        );
-      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      // Check password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      
-      if (!isPasswordValid) {
+      if (error) {
         return NextResponse.json(
-          { error: 'Invalid email or password' },
+          { error: error.message },
           { status: 401 }
-        );
+        )
       }
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { userId: user._id, email: user.email },
-        process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '7d' }
-      );
 
       return NextResponse.json({
         success: true,
         message: 'Login successful',
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          createdAt: user.createdAt
-        }
-      });
+        user: data.user,
+        session: data.session
+      })
     }
   } catch (error) {
-    console.error('Error in auth:', error);
+    console.error('Auth error:', error)
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }
-    );
+    )
+  }
+}
+
+// GET /api/auth - Get current user
+export async function GET() {
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 401 }
+      )
+    }
+
+    return NextResponse.json({ user })
+  } catch (error) {
+    console.error('Get user error:', error)
+    return NextResponse.json(
+      { error: 'Failed to get user' },
+      { status: 500 }
+    )
   }
 }

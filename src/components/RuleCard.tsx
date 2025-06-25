@@ -1,23 +1,28 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Shield, ExternalLink, Star, Download } from 'lucide-react';
+import React from "react";
+import { Shield, ExternalLink, Star, Download } from "lucide-react";
 
 interface Rule {
-  _id: string;
-  name: string;
+  id: string;
+  title: string;
   description: string;
   category: string;
-  downloads: number;
-  rating: number;
-  link?: string;
+  author_name: string;
+  votes: number;
+  views: number;
+  created_at: string;
+  tags: string[];
+  content: string;
+  link?: string; // Optional link property
 }
 
 interface RuleCardProps {
   rule: Rule;
+  onViewRule?: (rule: Rule) => void;
 }
 
-export default function RuleCard({ rule }: RuleCardProps) {
+export default function RuleCard({ rule, onViewRule }: RuleCardProps) {
   return (
     <div className="card p-6 hover:shadow-lg transition-all duration-200 group">
       <div className="flex items-start justify-between mb-4">
@@ -27,7 +32,7 @@ export default function RuleCard({ rule }: RuleCardProps) {
           </div>
           <div>
             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-              {rule.name}
+              {rule.title}
             </h3>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
               {rule.category}
@@ -50,21 +55,41 @@ export default function RuleCard({ rule }: RuleCardProps) {
         {rule.description}
       </p>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Star className="w-3 h-3" />
-            <span>{rule.rating.toFixed(1)}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Download className="w-3 h-3" />
-            <span>{rule.downloads.toLocaleString()}</span>
-          </div>
+      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+        <div className="flex items-center gap-2">
+          <Star className="w-3 h-3" />
+          <span>{rule?.votes} votes</span>
         </div>
-        
-        <button className="btn-primary text-xs px-3 py-1">
-          View Rule
-        </button>
+        <div className="flex items-center gap-2">
+          <Download className="w-3 h-3" />
+          <span>{rule?.views} views</span>
+        </div>
+        <span>
+          By {rule?.author_name} on{" "}
+          {new Date(rule.created_at).toLocaleDateString()}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {rule.tags && Array.isArray(rule.tags) && rule.tags.map((tag) => (
+          <span
+            key={tag}
+            className="text-xs bg-secondary px-2 py-1 rounded-full"
+          >
+            #{tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex justify-end">
+        {onViewRule && (
+          <button
+            onClick={() => onViewRule(rule)}
+            className="text-sm text-primary hover:underline"
+          >
+            View Rule
+          </button>
+        )}
       </div>
     </div>
   );

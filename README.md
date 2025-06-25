@@ -8,13 +8,13 @@ A Next.js application for discovering, creating, and managing AI agents with MCP
 - **MCP Integration**: Sync and manage Model Context Protocol servers
 - **Rules Management**: Create and share coding rules and best practices
 - **Responsive Design**: Modern UI built with Tailwind CSS
-- **MongoDB Integration**: Data persistence for agents, MCPs, and rules
+- **Supabase Integration**: Data persistence for agents, MCPs, and rules
 
 ## Tech Stack
 
 - **Framework**: Next.js 15 with App Router
 - **Styling**: Tailwind CSS
-- **Database**: MongoDB with Mongoose
+- **Database**: Supabase (PostgreSQL)
 - **Language**: TypeScript
 - **Icons**: Lucide React
 
@@ -23,7 +23,7 @@ A Next.js application for discovering, creating, and managing AI agents with MCP
 ### Prerequisites
 
 - Node.js 18+ 
-- MongoDB instance
+- Supabase project
 - npm or yarn
 
 ### Installation
@@ -44,9 +44,11 @@ npm install
 cp .env.example .env.local
 ```
 
-Update `.env.local` with your MongoDB connection string:
+Update `.env.local` with your Supabase credentials:
+
 ```
-MONGODB_URI=mongodb://localhost:27017/trueagents
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 4. Run the development server:
@@ -82,7 +84,7 @@ npm run dev
    - ✅ Shows engagement metrics (likes, views)
 
 4. **Database Integration**
-   - ✅ MongoDB connection working
+   - ✅ Supabase connection working
    - ✅ MCP data persistence
    - ✅ Bulk upsert operations for avoiding duplicates
 
@@ -148,7 +150,7 @@ src/
 ├── contexts/
 │   └── SearchContext.tsx         # Search state management
 ├── lib/
-│   └── mongodb.ts                # Database connection
+│   └── supabase.ts               # Database connection
 ├── models/
 │   └── MCP.ts                    # MCP data model
 └── types/
@@ -159,7 +161,8 @@ src/
 ## Environment Variables
 
 ```bash
-MONGODB_URI=mongodb://localhost:27017/trueagents
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ## Deployment

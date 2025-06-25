@@ -190,7 +190,8 @@ export default function RulesPage() {
     setFilteredRules(filtered);
   }, [rules, selectedCategory, searchQuery, sortBy]);
 
-  const handleSearch = (query: string) => {
+  // Function to handle search queries
+  const _handleSearch = (query: string) => {
     setSearchQuery(query);
   };
 
@@ -208,7 +209,7 @@ export default function RulesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onSearch={handleSearch} />
+      <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}

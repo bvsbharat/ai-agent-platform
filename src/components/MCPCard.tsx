@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Zap, ExternalLink, Star, Download, Play } from 'lucide-react';
-import Image from 'next/image';
+import React from "react";
+import { Zap, ExternalLink, Star, Play } from "lucide-react";
+import Image from "next/image";
 
 interface MCP {
   _id: string;
@@ -37,7 +37,7 @@ export default function MCPCard({ mcp }: MCPCardProps) {
                 className="object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
+                  target.style.display = "none";
                 }}
               />
             ) : (
@@ -86,14 +86,8 @@ export default function MCPCard({ mcp }: MCPCardProps) {
               <span>{mcp.rating.toFixed(1)}</span>
             </div>
           )}
-          {mcp.downloads && (
-            <div className="flex items-center gap-1">
-              <Download className="w-3 h-3" />
-              <span>{mcp.downloads.toLocaleString()}</span>
-            </div>
-          )}
         </div>
-        
+
         <button className="btn-primary text-xs px-3 py-1 flex items-center gap-1">
           <Play className="w-3 h-3" />
           Install

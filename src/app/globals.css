@@ -143,3 +143,31 @@
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out;
 }
+
+/* Title animation */
+@keyframes titleGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(var(--primary), 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(var(--primary), 0.7);
+  }
+}
+
+.animate-title-glow {
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+/* Subtle float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}

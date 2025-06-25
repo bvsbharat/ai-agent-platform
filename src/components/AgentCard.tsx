@@ -5,26 +5,20 @@ import { Eye, Download, Heart, User, Calendar, Tag, MoreVertical, Edit, Trash2, 
 import { formatDistanceToNow } from 'date-fns';
 
 interface Agent {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   category: string;
-  creator: {
-    name: string;
-    email: string;
-  };
-  metrics: {
-    views: number;
-    runs: number;
-    likes: number;
-  };
-  createdAt: string;
+  author_name: string;
+  likes: number;
+  views: number;
+  created_at: string;
   tags: string[];
 }
 
 interface AgentCardProps {
   agent: Agent;
-  onUpdate: () => void;
+  onUpdate?: () => void;
 }
 
 const getCategoryColor = (category: string) => {
@@ -45,7 +39,7 @@ const getCategoryColor = (category: string) => {
 };
 
 const getCategoryIcon = (category: string) => {
-  const icons: { [key: string]: any } = {
+  const icons: { [key: string]: React.ComponentType<{ className?: string }> } = {
     'Assistant': Bot,
     'Automation': Zap,
     'Analytics': BarChart3,
@@ -65,11 +59,11 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [runResult, setRunResult] = useState<string | null>(null);
+
 
   const handleLike = async () => {
     try {
-      const response = await fetch(`/api/agents/${agent._id}/like`, {
+      const response = await fetch(`/api/agents/${agent.id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +76,7 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
 
       if (response.ok) {
         setIsLiked(!isLiked);
-        onUpdate(); // Refresh the agents list to update metrics
+        onUpdate?.(); // Refresh the agents list to update metrics
       }
     } catch (error) {
       console.error('Error liking agent:', error);
@@ -102,7 +96,7 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
       // Show success message or redirect to installed agents
       alert(`Agent "${agent.name}" has been installed successfully!`);
       
-      onUpdate(); // Refresh to update metrics
+      onUpdate?.(); // Refresh to update metrics
     } catch (error) {
       console.error('Error installing agent:', error);
       alert('Error installing agent. Please try again.');
@@ -114,12 +108,12 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this agent?')) {
       try {
-        const response = await fetch(`/api/agents/${agent._id}`, {
+        const response = await fetch(`/api/agents/${agent.id}`, {
           method: 'DELETE',
         });
 
         if (response.ok) {
-          onUpdate(); // Refresh the agents list
+          onUpdate?.(); // Refresh the agents list
         }
       } catch (error) {
         console.error('Error deleting agent:', error);
@@ -182,7 +176,7 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
 
       {/* Description */}
       <p className="text-muted-foreground text-sm mb-3 line-clamp-2 font-mono">
-        <span className="text-primary">// </span>{agent.description}
+        <span className="text-primary">{"// "}</span>{agent.description}
       </p>
 
       {/* Tags */}
@@ -206,25 +200,25 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
       {/* Creator Info */}
       <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground font-mono">
         <User className="w-4 h-4" />
-        <span className="truncate">{agent.creator.name}</span>
+        <span className="truncate">{agent.author_name}</span>
         <span>•</span>
         <Calendar className="w-4 h-4" />
-        <span className="truncate">{formatDistanceToNow(new Date(agent.createdAt), { addSuffix: true })}</span>
+        <span className="truncate">{formatDistanceToNow(new Date(agent.created_at), { addSuffix: true })}</span>
       </div>
 
       {/* Metrics */}
       <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground font-mono">
         <div className="flex items-center gap-1">
           <Eye className="w-4 h-4" />
-          <span>{agent.metrics.views}</span>
+          <span>{agent.views}</span>
         </div>
         <div className="flex items-center gap-1">
           <Download className="w-4 h-4" />
-          <span>{agent.metrics.runs}</span>
+          <span>0</span>
         </div>
         <div className="flex items-center gap-1">
           <Heart className={`w-4 h-4 ${isLiked ? 'text-red-400 fill-current' : ''}`} />
-          <span>{agent.metrics.likes}</span>
+          <span>{agent.likes}</span>
         </div>
       </div>
 
@@ -249,7 +243,7 @@ export default function AgentCard({ agent, onUpdate }: AgentCardProps) {
         </button>
         <button
           onClick={() => {
-            const traeUrl = `https://s.trae.ai/a/${agent._id}`;
+            const traeUrl = `https://s.trae.ai/a/${agent.id}`;
             // Try multiple methods to open the Trae app
             const link = document.createElement('a');
             link.href = traeUrl;
