@@ -133,9 +133,8 @@ export default function Home() {
       <section className="gradient-bg text-foreground py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
           <h1 className="text-6xl font-bold mb-6 font-mono animate-float">
-            <span className="animate-title-glow">TheSuperAgents</span> Hub
-            <span className="block text-4xl mt-2 text-primary animate-pulse">
-              --marketplace for AI automation
+            <span className="animate-title-glow">
+              The AI Hub for Developers
             </span>
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground font-mono">
@@ -197,30 +196,97 @@ export default function Home() {
           )}
         </section>
 
-        {/* Agents Coming Soon Section */}
+        {/* Featured Agents Section */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold font-mono flex items-center gap-3">
                 <Bot className="w-8 h-8 text-primary" />
-                Agents
+                Featured Agents
               </h2>
               <p className="text-muted-foreground mt-2 font-mono">
-                {"// Coming Soon"}
+                {"// Discover powerful AI agents"}
               </p>
             </div>
+            <Link
+              href="#"
+              className="btn-secondary inline-flex items-center gap-2"
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-12 text-center">
-            <Bot className="w-16 h-16 text-primary mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Agents Coming Soon</h3>
-            <p className="text-muted-foreground max-w-lg mx-auto mb-6">
-              We&apos;re working hard to bring you a powerful AI agent
-              marketplace. Stay tuned for updates!
-            </p>
-            <div className="inline-flex items-center gap-2 text-primary">
-              <User className="w-4 h-4" />
-              <span>Join our waitlist to get early access</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Bot className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold">Code Assistant Pro</h3>
+                  <p className="text-sm text-muted-foreground">by Windsurf</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Advanced code generation and refactoring with context-aware
+                suggestions.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="category-badge">Development</span>
+                </div>
+                <Link href="#" className="text-primary text-sm hover:underline">
+                  View Details
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Bot className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold">Data Analyzer</h3>
+                  <p className="text-sm text-muted-foreground">by TREA</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Intelligent data processing and visualization with natural
+                language queries.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="category-badge">Data Science</span>
+                </div>
+                <Link href="#" className="text-primary text-sm hover:underline">
+                  View Details
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Bot className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold">Content Creator</h3>
+                  <p className="text-sm text-muted-foreground">by Claude</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Generate high-quality content with customizable tone and style
+                preferences.
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="category-badge">Content</span>
+                </div>
+                <Link href="#" className="text-primary text-sm hover:underline">
+                  View Details
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -228,23 +294,23 @@ export default function Home() {
         {/* Call to Action */}
         <section className="text-center py-16 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
           <h2 className="text-4xl font-bold mb-4 font-mono">
-            Ready to Build the Future?
+            Join the Movement
           </h2>
           <p className="text-xl text-muted-foreground mb-8 font-mono">
-            Join thousands of developers creating the next generation of AI
-            automation
+            Connect with other AI developers and shape the future of intelligent
+            app development
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <div className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8 opacity-70 cursor-not-allowed">
+            <div className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8">
               <Plus className="w-5 h-5" />
-              Create Agent (Coming Soon)
+              Create Your Agent
             </div>
             <Link
               href="/mcps"
               className="btn-secondary inline-flex items-center gap-2 text-lg py-3 px-8"
             >
-              <Zap className="w-5 h-5" />
-              Browse MCPs
+              <User className="w-5 h-5" />
+              Join Community
             </Link>
           </div>
         </section>

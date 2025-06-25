@@ -35,7 +35,7 @@ export default function Header({}: HeaderProps) {
   // Search functionality removed
 
   return (
-    <header className="bg-transparent border-b border-border">
+    <header className="bg-transparent border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
