@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Plus,
-  Calendar,
-  ArrowRight,
-  Bot,
-  Zap,
-  User,
-} from "lucide-react";
+import { Plus, Calendar, ArrowRight, Bot, Zap, User } from "lucide-react";
 import Link from "next/link";
 import MCPCard from "@/components/MCPCard";
 import Header from "@/components/Header";
@@ -64,7 +57,9 @@ export default function Home() {
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   // Destructuring but not using authLoading
-  const { /* loading: authLoading */ } = useAuth();
+  const {
+    /* loading: authLoading */
+  } = useAuth();
 
   const fetchTrendingData = useCallback(async () => {
     setLoading(true);
@@ -93,7 +88,7 @@ export default function Home() {
           rating: 4.8,
         },
       */
-        /*
+      /*
         {
           _id: "2",
           name: "Smart Calendar Scheduler",
@@ -138,20 +133,22 @@ export default function Home() {
       <section className="gradient-bg text-foreground py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
           <h1 className="text-6xl font-bold mb-6 font-mono animate-float">
-            <span className="terminal-text">$</span> <span className="animate-title-glow">TheSuperAgents</span> Hub
+            <span className="animate-title-glow">TheSuperAgents</span> Hub
             <span className="block text-4xl mt-2 text-primary animate-pulse">
               --marketplace for AI automation
             </span>
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground font-mono">
-            Discover, create, and deploy AI agents, MCPs, and automation rules.{" "}
-            <br />
+            Discover, create AI agents, MCPs and coding rules. <br />
             <span className="text-primary">
               {"// Join the future of autonomous automation"}
             </span>
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in"
+            style={{ animationDelay: "0.3s" }}
+          >
             <div className="btn-primary inline-flex items-center gap-2 text-lg py-3 px-8 opacity-70 cursor-not-allowed hover:scale-105 transition-transform">
               <Bot className="w-5 h-5" />
               Agents (Coming Soon)
@@ -163,46 +160,6 @@ export default function Home() {
               <Zap className="w-5 h-5 animate-pulse" />
               Explore MCPs
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="bg-card border-y border-border py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-primary font-mono">
-                10K+
-              </div>
-              <div className="text-muted-foreground font-mono">
-                Active Agents
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary font-mono">
-                5K+
-              </div>
-              <div className="text-muted-foreground font-mono">
-                MCPs Available
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary font-mono">
-                2K+
-              </div>
-              <div className="text-muted-foreground font-mono">
-                Automation Rules
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary font-mono">
-                50K+
-              </div>
-              <div className="text-muted-foreground font-mono">
-                Community Members
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -258,8 +215,8 @@ export default function Home() {
             <Bot className="w-16 h-16 text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-2">Agents Coming Soon</h3>
             <p className="text-muted-foreground max-w-lg mx-auto mb-6">
-              We&apos;re working hard to bring you a powerful AI agent marketplace.
-              Stay tuned for updates!
+              We&apos;re working hard to bring you a powerful AI agent
+              marketplace. Stay tuned for updates!
             </p>
             <div className="inline-flex items-center gap-2 text-primary">
               <User className="w-4 h-4" />

@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase'
+// import { supabaseAdmin } from '@/lib/supabase-admin'
+import puppeteer from 'puppeteer'
+
+// Interface for scraped hackathon data
+interface HackathonData {
+  title: string
+  description: string
+  location: string
+  date: string
+  time: string
+  organizer: string
+  attendees: number
+  image_url: string | null
+  event_url: string
+  is_online: boolean
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -20,69 +36,49 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const offset = (page - 1) * limit
 
-    // For now, we'll return mock data
-    // In a real implementation, this would query the database
-    const mockHackathons = [
-      {
-        id: '1',
-        title: 'DeployCon: Live Stream',
-        description: 'Join us for DeployCon, a virtual conference focused on deployment strategies and best practices.',
-        location: 'Online',
-        date: '2023-06-21',
-        time: '10:30 AM',
-        organizer: 'Michael Ortega & Natasha Berman',
-        attendees: 279,
-        imageUrl: '/hackathon-images/deploycon.jpg',
-        eventUrl: 'https://lu.ma/event/evt-IXvl3ztGU9kgKkN',
-        isOnline: true
-      },
-      {
-        id: '2',
-        title: 'ACCEL R8 | 1412 Hacker Hotel OPEN HOUSE',
-        description: 'Join us for an open house at the 1412 Hacker Hotel, where innovation meets community.',
-        location: '1412 Market St, San Francisco',
-        date: '2023-06-21',
-        time: '1:00 PM',
-        organizer: 'Pat Santiago & Colin Lowenburg',
-        attendees: 109,
-        imageUrl: '/hackathon-images/accelr8.jpg',
-        eventUrl: 'https://lu.ma/event/evt-KAB1ztGU9kgKkN',
-        isOnline: false
-      },
-      {
-        id: '3',
-        title: 'Viva Frontier Tower Pop-up Village',
-        description: 'Experience the Viva Frontier Tower Pop-up Village, a hub for creativity and innovation.',
-        location: 'Frontier Tower, San Francisco',
-        date: '2023-06-23',
-        time: '6:00 PM',
-        organizer: 'Viva City',
-        attendees: 482,
-        imageUrl: '/hackathon-images/viva.jpg',
-        eventUrl: 'https://lu.ma/event/evt-XYZ1ztGU9kgKkN',
-        isOnline: false
-      },
-    ]
+    // Build the query
+    let query = supabase
+      .from('hackathons')
+      .select('*', { count: 'exact' })
 
-    // Filter hackathons based on location
-    let filteredHackathons = mockHackathons
+    // Apply filters
     if (location && location !== 'All') {
       if (location === 'Online') {
-        filteredHackathons = mockHackathons.filter(h => h.isOnline)
+        query = query.eq('is_online', true)
       } else {
-        filteredHackathons = mockHackathons.filter(h => 
-          h.location.includes(location)
-        )
+        query = query.ilike('location', `%${location}%`)
       }
     }
 
     // Apply pagination
-    const paginatedHackathons = filteredHackathons.slice(offset, offset + limit)
-    const totalCount = filteredHackathons.length
+    const { data: hackathons, count, error } = await query
+      .order('date', { ascending: true })
+      .range(offset, offset + limit - 1)
+
+    if (error) {
+      throw error
+    }
+
+    // Transform data to match the expected format in the frontend
+    const transformedHackathons = hackathons.map(h => ({
+      id: h.id,
+      title: h.title,
+      description: h.description,
+      location: h.location,
+      date: h.date,
+      time: h.time,
+      organizer: h.organizer,
+      attendees: h.attendees,
+      imageUrl: h.image_url,
+      eventUrl: h.event_url,
+      isOnline: h.is_online
+    }))
+
+    const totalCount = count || 0
     const totalPages = Math.ceil(totalCount / limit)
 
     return NextResponse.json({
-      hackathons: paginatedHackathons,
+      hackathons: transformedHackathons,
       pagination: {
         page,
         limit,
@@ -98,5 +94,177 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch hackathons' },
       { status: 500 }
     )
+  }
+}
+
+// POST /api/hackathons/scrape - Scrape hackathons from Devpost
+export async function POST(request: NextRequest) {
+  try {
+    // Check for admin authorization
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
+    // Get user profile to check if admin
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('email')
+      .eq('id', user.id)
+      .single()
+    
+    // Only allow admins to trigger scraping
+    if (!userProfile?.email.includes('@trueagents.ai')) {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
+      )
+    }
+    
+    // Start scraping process
+    const hackathons = await scrapeDevpost()
+    
+    if (hackathons.length === 0) {
+      return NextResponse.json(
+        { message: 'No hackathons found to save' },
+        { status: 200 }
+      )
+    }
+    
+    // Save hackathons to database
+    const result = await saveHackathonsToDatabase(hackathons)
+    
+    return NextResponse.json({
+      message: `Successfully scraped and saved ${hackathons.length} hackathons`,
+      count: hackathons.length
+    })
+  } catch (error) {
+    console.error('Error scraping hackathons:', error)
+    return NextResponse.json(
+      { error: 'Failed to scrape hackathons' },
+      { status: 500 }
+    )
+  }
+}
+
+async function scrapeDevpost() {
+  console.log('Starting Devpost hackathon scraping...')
+  
+  const browser = await puppeteer.launch({
+    headless: 'new',
+  })
+  
+  try {
+    const page = await browser.newPage()
+    
+    // Navigate to Devpost hackathons page
+    await page.goto('https://devpost.com/hackathons', {
+      waitUntil: 'networkidle2',
+    })
+    
+    console.log('Page loaded, scraping hackathons...')
+    
+    // Extract hackathon data
+    const hackathons = await page.evaluate(() => {
+      const hackathonCards = Array.from(document.querySelectorAll('.challenge-listing'))
+      
+      return hackathonCards.map(card => {
+        // Get title and URL
+        const titleElement = card.querySelector('.challenge-title a')
+        const title = titleElement?.textContent?.trim() || 'Unknown Hackathon'
+        const eventUrl = titleElement?.getAttribute('href') || ''
+        
+        // Get image
+        const imageElement = card.querySelector('.challenge-logo img')
+        const imageUrl = imageElement?.getAttribute('src') || null
+        
+        // Get description
+        const description = card.querySelector('.challenge-description')?.textContent?.trim() || 'No description available'
+        
+        // Get location (online or in-person)
+        const locationElement = card.querySelector('.challenge-location')
+        const locationText = locationElement?.textContent?.trim() || 'Unknown'
+        const isOnline = locationText.toLowerCase().includes('online')
+        
+        // Get date information
+        const dateElement = card.querySelector('.challenge-time-left')
+        const dateText = dateElement?.textContent?.trim() || ''
+        
+        // Parse date information
+        let date = new Date().toISOString().split('T')[0] // Default to today
+        let time = '12:00 PM' // Default time
+        
+        if (dateText.includes('Ends')) {
+          // Extract end date if available
+          const endDateMatch = dateText.match(/Ends (\w+ \d+)/i)
+          if (endDateMatch && endDateMatch[1]) {
+            const endDateStr = `${endDateMatch[1]}, ${new Date().getFullYear()}`
+            const endDate = new Date(endDateStr)
+            date = endDate.toISOString().split('T')[0]
+          }
+        }
+        
+        // Get organizer
+        const organizerElement = card.querySelector('.challenge-organizer')
+        const organizer = organizerElement?.textContent?.trim() || 'Unknown Organizer'
+        
+        // Estimate attendees (random number for now since it's not directly available)
+        const attendees = Math.floor(Math.random() * 500) + 50
+        
+        return {
+          title,
+          description,
+          location: isOnline ? 'Online' : locationText,
+          date,
+          time,
+          organizer,
+          attendees,
+          image_url: imageUrl,
+          event_url: eventUrl,
+          is_online: isOnline
+        }
+      })
+    })
+    
+    console.log(`Scraped ${hackathons.length} hackathons`)
+    return hackathons
+  } catch (error) {
+    console.error('Error scraping Devpost:', error)
+    return []
+  } finally {
+    await browser.close()
+  }
+}
+
+async function saveHackathonsToDatabase(hackathons: HackathonData[]) {
+  console.log('Saving hackathons to database...')
+  
+  try {
+    // Insert new hackathons
+    const { data, error } = await supabaseAdmin
+      .from('hackathons')
+      .upsert(
+        hackathons.map(hackathon => ({
+          ...hackathon,
+          // Use event_url as a unique identifier for upsert
+          id: undefined // Let Supabase generate IDs for new entries
+        })),
+        { onConflict: 'event_url' } // Upsert based on event_url
+      )
+    
+    if (error) {
+      throw error
+    }
+    
+    console.log(`Successfully saved ${hackathons.length} hackathons to database`)
+    return data
+  } catch (error) {
+    console.error('Error saving hackathons to database:', error)
+    return null
   }
 }

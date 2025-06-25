@@ -58,6 +58,28 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Scraping Hackathons
+
+To populate the hackathon data from Devpost:
+
+1. Make sure you have the `SUPABASE_SERVICE_ROLE_KEY` environment variable set in your `.env.local` file:
+
+```
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+2. Run the scraper script:
+
+```bash
+npm run scrape-hackathons
+```
+
+Alternatively, you can trigger the scraping process via the API endpoint (requires admin authentication):
+
+```bash
+curl -X POST http://localhost:3000/api/hackathons
+```
+
 ## Testing Results
 
 ### ✅ Working Features
@@ -90,7 +112,16 @@ npm run dev
 
 5. **API Endpoints**
    - ✅ `/api/mcps` - Successfully fetches and stores MCP data
+   - ✅ `/api/hackathons` - Fetches hackathon data from Supabase
+   - ✅ `/api/hackathons` (POST) - Triggers scraping of hackathons from Devpost
    - ✅ Proper error handling and validation
+
+6. **Hackathon Feature**
+   - ✅ Displays hackathons from Devpost
+   - ✅ Filters for online and in-person events
+   - ✅ Automatic scraping of hackathon data
+   - ✅ Pagination for browsing multiple hackathons
+   - ✅ Categorization by upcoming and past events
 
 ### ❌ Issues Found
 

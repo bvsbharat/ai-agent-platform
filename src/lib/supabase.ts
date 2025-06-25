@@ -46,6 +46,53 @@ export const createServerSupabaseClient = async () => {
 export type Database = {
   public: {
     Tables: {
+      hackathons: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          location: string
+          date: string
+          time: string
+          organizer: string
+          attendees: number
+          image_url: string | null
+          event_url: string
+          is_online: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          location: string
+          date: string
+          time: string
+          organizer: string
+          attendees?: number
+          image_url?: string | null
+          event_url: string
+          is_online?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          location?: string
+          date?: string
+          time?: string
+          organizer?: string
+          attendees?: number
+          image_url?: string | null
+          event_url?: string
+          is_online?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
       agents: {
         Row: {
           id: string
