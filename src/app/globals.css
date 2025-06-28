@@ -4,27 +4,32 @@
 
 @layer base {
   :root {
-    /* Default Dark+ theme - will be overridden by ThemeProvider */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 85%;
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 90%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 90%;
-    --primary: 210 100% 60%;
+    /* Dark theme inspired by the image */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 90%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 140 70% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 80%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 60%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
     --accent: 210 100% 60%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 90%;
-    --border: 0 0% 20%;
-    --input: 0 0% 15%;
-    --ring: 210 100% 60%;
-    --radius: 0.375rem;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 140 70% 50%;
+    --radius: 0.75rem;
+    
+    /* Feature card colors */
+    --green-card: 140 70% 50%;
+    --yellow-card: 48 100% 50%;
+    --blue-card: 210 100% 60%;
   }
 }
 
@@ -44,7 +49,7 @@
 
 @layer components {
   .gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+    background: hsl(var(--background));
     border-bottom: 1px solid hsl(var(--border));
   }
   
@@ -56,15 +61,15 @@
   }
   
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/50;
+    @apply transition-all duration-300 hover:shadow-lg hover:border-primary/50;
   }
   
   .btn-primary {
-    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-md transition-colors duration-200 font-mono;
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-full transition-colors duration-200 font-mono;
   }
   
   .btn-secondary {
-    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-2 px-4 rounded-md transition-colors duration-200 font-mono;
+    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium py-2 px-4 rounded-full transition-colors duration-200 font-mono;
   }
   
   .btn-install {
@@ -102,16 +107,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #111;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #333;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #444;
 }
 
 /* Loading animation */
